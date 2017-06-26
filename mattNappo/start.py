@@ -1,1 +1,1 @@
-lol test
+print(10)
