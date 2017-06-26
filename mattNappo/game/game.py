@@ -17,10 +17,18 @@ class Character():
         self.down = False
         self.left = False
         self.right = False
+        self.lastDir = None
         self.width = 50
         self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
+        if self.left == False and self.right == False:
+            if self.lastDir == 0:
+                spr = pyglet.image.load("img/spr/left.png")
+                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+            elif self.lastDir == 1:
+                spr = pyglet.image.load("img/spr/right.png")
+                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
         if self.up == True:
             self.y = self.y + self.velocity
             self.character.y = self.y
@@ -28,16 +36,18 @@ class Character():
             self.y = self.y - self.velocity
             self.character.y = self.y
         if self.left == True:
-            self.character = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
+            runImg = pyglet.image.load("img/spr/runLeft.png")
+            self.character = pyglet.sprite.Sprite(runImg, x=self.x, y=self.y)
             self.x = self.x - self.velocity
             self.character.x = self.x
         if self.right == True:
-            self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+            runImg = pyglet.image.load("img/spr/runRight.png")
+            self.character = pyglet.sprite.Sprite(runImg, x=self.x, y=self.y)
             self.x = self.x + self.velocity
             self.character.x = self.x
-
+            lastDir = 1
 window = pyglet.window.Window(1440, 900)
-window.set_caption("Backslash")
+window.set_caption("Remake of Mario")
 
 background = Background()
 char = Character(50, 50)
@@ -49,7 +59,6 @@ def on_draw():
     window.clear()
     background.background.draw()
     char.character.draw()
-
 @window.event
 def on_key_press(symbol, modifiers):
     if symbol == key.W:
@@ -60,7 +69,6 @@ def on_key_press(symbol, modifiers):
         char.left = True
     if symbol == key.D:
         char.right = True
-
 @window.event
 def on_key_release(symbol, modifiers):
     if symbol == key.W:
