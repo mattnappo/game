@@ -1,6 +1,6 @@
 import pyglet, webbrowser
 from pyglet.window import key
-import random 
+import random, time
 from os import system
 
 class Background():
@@ -31,9 +31,17 @@ class Character():
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
         self.velocity = self.velocity - .3
-        if self.y + self.height >= 260:
-            self.y = self.velocity + self.y
+        if self.y + self.height <= 255: #ground
+            self.velocity = 0
+            self.y = 255 - self.height
             self.character.y = self.y
+        if self.y >= 416 and self.y < 424: #platform one
+            if self.x >= 689 and self.x <= 901:
+                self.velocity = 0
+                self.y = 420
+                self.character.y = self.y
+        self.y = self.velocity + self.y
+        self.character.y = self.y
         if self.left == False and self.right == False:
             if self.lastDir == 0:
                 spr = pyglet.image.load("img/spr/left.png")
@@ -61,7 +69,7 @@ class Character():
             self.character.x = self.x
             self.lastDir = 1
         
-    def spiderSense(self, dt):
+    def spiderSense(self, dt): #left and right detection
         if self.x <= 0:
             self.health-=1
             self.x = 2
@@ -70,6 +78,12 @@ class Character():
             self.health-=1
             self.x = 1357
             self.character.x = self.x
+        '''
+        if self.x >= 680 and self.x <= 900:
+            if self.y >= 320:
+                self.y = 320 + self.height
+                self.character.y = self.y
+        '''
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
