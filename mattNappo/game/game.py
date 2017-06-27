@@ -88,9 +88,9 @@ class Character():
             self.character.x = self.x
             self.lastDir = 1
     def coinDetect(self, dt):
-        if self.x == coins.x + coins.width:
-            print("hey")
-            if self.y == coins.y + coins.height:
+        if self.x >= coins.x-3 and self.x <= coins.x+3:
+            print(str(coins.x) + " : " + str(self.x))
+            if self.y >= coins.y-3 and self.y <= coins.y+3:
                 print("it works")
                 self.points+=1
                 coins.spawn()
