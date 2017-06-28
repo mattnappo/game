@@ -40,11 +40,6 @@ class Coin():
 coins = Coin()
 coins.spawn(0)
 
-
-
-
-
-
 class Platform():
     def __init__(self, x, y, length):
         self.x = x
@@ -52,8 +47,9 @@ class Platform():
         self.length = length
         
 p1 = Platform(471, 296, 473)
+p2 = Platform(0, 150, 296)
 platforms = [p1]
-    
+
 class Character():
     def __init__(self, xx, yy):
         self.x = xx
@@ -75,19 +71,23 @@ class Character():
     def move(self, dt):
         #DETECTION
         for i in range(len(platforms)):
-            if self.x > platforms[i].x and self.x < platforms[i].x + platforms[i].length:
-                self.y = platforms[i].y
+            if self.x >= platforms[i].x and self.x <= platforms[i].x + platforms[i].length:
+                if self.y <= platforms[i].y + 4 and self.y >= platforms[i].y - 6:
+                    self.velocity = 0
+                    self.y = platforms[i].y
+                    self.character.y = self.y
+                
         
         self.velocity = self.velocity - .4
         if self.y + self.height <= 255: # ground
             self.velocity = 0
             self.y = 255 - self.height
             self.character.y = self.y
-        if self.y >= 287 and self.y < 298: # platform one (these numbers are the height)
+        '''if self.y >= 287 and self.y < 298: # platform one (these numbers are the height)
             if self.x >= 478 and self.x <= 901: # these numbers are the length
                 self.velocity = 0
                 self.y = 296
-                self.character.y = self.y
+                self.character.y = self.y'''
         if self.y >= 287 and self.y < 298: # right platform
             if self.x >= 1200 and self.x <= 1400:
                 self.velocity = 0
