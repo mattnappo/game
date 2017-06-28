@@ -5,7 +5,7 @@ from os import system
 
 class Background():
     def __init__(self):
-        self.img = pyglet.image.load("img/newBackground.jpg") 
+        self.img = pyglet.image.load("img/blank2.jpg") 
         self.background = pyglet.sprite.Sprite(self.img, x=0, y=0)
 class Coin():
     def __init__(self):
@@ -48,15 +48,25 @@ class Character():
         self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
-        self.velocity = self.velocity - .3
-        if self.y + self.height <= 255: #ground
+        self.velocity = self.velocity - .4
+        if self.y + self.height <= 255: # ground
             self.velocity = 0
             self.y = 255 - self.height
             self.character.y = self.y
-        if self.y >= 383 and self.y < 394: #platform one (these numbers are the height)
-            if self.x >= 678 and self.x <= 901: # these numbers are the length
+        if self.y >= 287 and self.y < 298: # platform one (these numbers are the height)
+            if self.x >= 478 and self.x <= 901: # these numbers are the length
                 self.velocity = 0
-                self.y = 393
+                self.y = 296
+                self.character.y = self.y
+        if self.y >= 287 and self.y < 298: # right platform
+            if self.x >= 1200 and self.x <= 1400:
+                self.velocity = 0
+                self.y = 296
+                self.character.y = self.y
+        if self.y >= 287 and self.y < 298: # left platform
+            if self.x >= 0 and self.x <= 150:
+                self.velocity = 0
+                self.y = 296
                 self.character.y = self.y
         self.y = self.velocity + self.y
         self.character.y = self.y
@@ -88,10 +98,8 @@ class Character():
             self.character.x = self.x
             self.lastDir = 1
     def coinDetect(self, dt):
-        if self.x >= coins.x-3 and self.x <= coins.x+3:
-            print(str(coins.x) + " : " + str(self.x))
-            if self.y >= coins.y-3 and self.y <= coins.y+3:
-                print("it works")
+        if self.x + self.width >= coins.x and self.x <= coins.x + coins.width:
+            if self.y + self.height >= coins.y and self.y <= coins.y + coins.height:
                 self.points+=1
                 coins.spawn()
     def spiderSense(self, dt): #left and right detection
