@@ -2,47 +2,58 @@ import pyglet, webbrowser
 from pyglet.window import key
 import random, time
 from os import system
+from pyglet.libs.win32.libwintab import CTX_SYSORGX
 
 class Background():
     def __init__(self):
         self.img = pyglet.image.load("img/background.jpg") 
         self.background = pyglet.sprite.Sprite(self.img, x=0, y=0)
-normalCoin = True
+
 class Coin():
     def __init__(self):
         self.value = 1
-        self.x = 0
-        self.y = 0
+        self.x = 75
+        self.y = 350
         self.height = 75
         self.width = 75
+        self.normalCoin = True
         self.img = [pyglet.image.load("img/coin.png"), pyglet.image.load("img/green.png")]
         self.spr = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def spawn(self, points):
-        normalCoin = True
         doWhat = random.randint(1, 5)
         if doWhat > 1:
-            normalCoin = True
-            xTemp = random.randint(20, 1000)
-            gdr = 225 + self.height
-            yTemp = random.randint(gdr, 500)
-            self.x = xTemp
-            self.y = yTemp
+            self.normalCoin = True
+            self.x = random.randint(20, 1000)
+            self.y = random.randint(300, 600)
+            self.spr = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
             self.spr.x = self.x
             self.spr.y = self.y
         elif doWhat == 1 and points > 20:
-            normalCoin = False
-            xTemp = random.randint(20, 1000)
-            gdr = 225 + self.height
-            yTemp = random.randint(gdr, 500)
-            self.x = xTemp
-            self.y = yTemp
+            self.normalCoin = False
+            self.x = random.randint(20, 1000)
+            self.y = random.randint(300, 600)
             self.spr = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
             self.spr.x = self.x
             self.spr.y = self.y
+            
 
 coins = Coin()
 coins.spawn(0)
 
+
+
+
+
+
+class Platform():
+    def __init__(self, x, y, length):
+        self.x = x
+        self.y = y
+        self.length = length
+        
+p1 = Platform(471, 296, 473)
+platforms = [p1]
+    
 class Character():
     def __init__(self, xx, yy):
         self.x = xx
@@ -63,6 +74,10 @@ class Character():
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
         #DETECTION
+        for i in range(len(platforms)):
+            if self.x > platforms[i].x and self.x < platforms[i].x + platforms[i].length:
+                self.y = platforms[i].y
+        
         self.velocity = self.velocity - .4
         if self.y + self.height <= 255: # ground
             self.velocity = 0
@@ -136,7 +151,8 @@ class Character():
     def coinDetect(self, dt):
         if self.x + self.width >= coins.x and self.x <= coins.x + coins.width:
             if self.y + self.height >= coins.y and self.y <= coins.y + coins.height:
-                if normalCoin == True:
+                print(coins.normalCoin)
+                if coins.normalCoin == True:
                     self.normalColor = True
                     self.points+=1
                     coins.spawn(self.points)
