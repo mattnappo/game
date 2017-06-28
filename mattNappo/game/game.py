@@ -5,8 +5,9 @@ from os import system
 
 class Background():
     def __init__(self):
-        self.img = pyglet.image.load("img/blank2.jpg") 
+        self.img = pyglet.image.load("img/background.jpg") 
         self.background = pyglet.sprite.Sprite(self.img, x=0, y=0)
+normalCoin = True
 class Coin():
     def __init__(self):
         self.value = 1
@@ -14,21 +15,33 @@ class Coin():
         self.y = 0
         self.height = 75
         self.width = 75
-        self.img = pyglet.image.load("img/coin.png")
-        self.spr = pyglet.sprite.Sprite(self.img, x=self.x, y=self.y)
-    def spawn(self):
-        xTemp = random.randint(20, 1000)
-        gdr = 225 + self.height
-        yTemp = random.randint(gdr, 500)
-        self.x = xTemp
-        self.y = yTemp
-        self.spr.x = self.x
-        self.spr.y = self.y
+        self.img = [pyglet.image.load("img/coin.png"), pyglet.image.load("img/green.png")]
+        self.spr = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+    def spawn(self, points):
+        normalCoin = True
+        doWhat = random.randint(1, 5)
+        if doWhat > 1:
+            normalCoin = True
+            xTemp = random.randint(20, 1000)
+            gdr = 225 + self.height
+            yTemp = random.randint(gdr, 500)
+            self.x = xTemp
+            self.y = yTemp
+            self.spr.x = self.x
+            self.spr.y = self.y
+        elif doWhat == 1 and points > 20:
+            normalCoin = False
+            xTemp = random.randint(20, 1000)
+            gdr = 225 + self.height
+            yTemp = random.randint(gdr, 500)
+            self.x = xTemp
+            self.y = yTemp
+            self.spr = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
+            self.spr.x = self.x
+            self.spr.y = self.y
 
-coinGroup = []        
 coins = Coin()
-coinGroup.append(coins)
-coins.spawn()
+coins.spawn(0)
 
 class Character():
     def __init__(self, xx, yy):
@@ -36,8 +49,9 @@ class Character():
         self.y = yy
         self.health = 100
         self.amount = 7.5
-        self.points = 0
+        self.points = 19
         self.velocity = 0
+        self.normalColor = True
         self.up = False
         self.down = False
         self.left = False
@@ -48,6 +62,7 @@ class Character():
         self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
+        #DETECTION
         self.velocity = self.velocity - .4
         if self.y + self.height <= 255: # ground
             self.velocity = 0
@@ -68,40 +83,67 @@ class Character():
                 self.velocity = 0
                 self.y = 296
                 self.character.y = self.y
+                
+        #gravity
         self.y = self.velocity + self.y
         self.character.y = self.y
+        
+        #no movement
         if self.left == False and self.right == False:
             if self.lastDir == 0:
-                spr = pyglet.image.load("img/spr/left.png")
-                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                if self.normalColor == True:
+                    spr = pyglet.image.load("img/spr/left.png")
+                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                else:
+                    spr = pyglet.image.load("img/spr/green/left.png")
+                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             elif self.lastDir == 1:
-                spr = pyglet.image.load("img/spr/right.png")
-                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                if self.normalColor == True:
+                    spr = pyglet.image.load("img/spr/right.png")
+                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                else:
+                    spr = pyglet.image.load("img/spr/green/right.png")
+                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                
+        #jump
         if self.up == True:
             if(self.velocity == 0):
                 self.velocity = 9
             self.y = self.velocity + self.y
             self.character.y = self.y
-        if self.down == True:
-            self.y = self.y - self.amount
-            self.character.y = self.y
+        
+        #left and right movement
         if self.left == True:
-            runImg = pyglet.image.load("img/spr/runLeft.png")
-            self.character = pyglet.sprite.Sprite(runImg, x=self.x, y=self.y)
+            if self.normalColor == True:
+                spr = pyglet.image.load("img/spr/runLeft.png")
+                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+            else:
+                spr = pyglet.image.load("img/spr/green/runLeft.png")
+                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             self.x = self.x - self.amount
             self.character.x = self.x
             self.lastDir = 0
         if self.right == True:
-            runImg = pyglet.image.load("img/spr/runRight.png")
-            self.character = pyglet.sprite.Sprite(runImg, x=self.x, y=self.y)
+            if self.normalColor == True:
+                spr = pyglet.image.load("img/spr/runRight.png")
+                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+            else:
+                spr = pyglet.image.load("img/spr/green/runRight.png")
+                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             self.x = self.x + self.amount
             self.character.x = self.x
             self.lastDir = 1
     def coinDetect(self, dt):
         if self.x + self.width >= coins.x and self.x <= coins.x + coins.width:
             if self.y + self.height >= coins.y and self.y <= coins.y + coins.height:
-                self.points+=1
-                coins.spawn()
+                if normalCoin == True:
+                    self.normalColor = True
+                    self.points+=1
+                    coins.spawn(self.points)
+                else:
+                    self.normalColor = False
+                    self.points-=20
+                    
     def spiderSense(self, dt): #left and right detection
         if self.x <= 0:
             self.health-=1
