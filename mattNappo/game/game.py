@@ -46,9 +46,13 @@ class Platform():
         self.y = y
         self.length = length
         
-p1 = Platform(471, 296, 473)
-p2 = Platform(0, 150, 296)
-platforms = [p1]
+p1 = Platform(467, 299, 435) # center
+p2 = Platform(0, 299, 190) # left
+p3 = Platform(1175, 299, 185) # right
+p4 = Platform(0, 179, 1440) # ground
+p5 = Platform(910, 433, 255) #  upper right
+p6 = Platform(200, 433, 260) # upper left
+platforms = [p1, p2, p3, p4, p5, p6]
 
 class Character():
     def __init__(self, xx, yy):
@@ -69,40 +73,21 @@ class Character():
         self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
+        #gravity
+        self.velocity = self.velocity - .4
+        if self.velocity < -8:
+            self.velocity = -8
+        self.y = self.velocity + self.y
+        self.character.y = self.y
+        print("y: ", str(self.y), "vel: ", str(self.velocity))
         #DETECTION
         for i in range(len(platforms)):
             if self.x >= platforms[i].x and self.x <= platforms[i].x + platforms[i].length:
-                if self.y <= platforms[i].y + 4 and self.y >= platforms[i].y - 6:
+                if self.y <= platforms[i].y + 4 and self.y >= platforms[i].y - 10:
                     self.velocity = 0
                     self.y = platforms[i].y
                     self.character.y = self.y
-                
-        
-        self.velocity = self.velocity - .4
-        if self.y + self.height <= 255: # ground
-            self.velocity = 0
-            self.y = 255 - self.height
-            self.character.y = self.y
-        '''if self.y >= 287 and self.y < 298: # platform one (these numbers are the height)
-            if self.x >= 478 and self.x <= 901: # these numbers are the length
-                self.velocity = 0
-                self.y = 296
-                self.character.y = self.y'''
-        if self.y >= 287 and self.y < 298: # right platform
-            if self.x >= 1200 and self.x <= 1400:
-                self.velocity = 0
-                self.y = 296
-                self.character.y = self.y
-        if self.y >= 287 and self.y < 298: # left platform
-            if self.x >= 0 and self.x <= 150:
-                self.velocity = 0
-                self.y = 296
-                self.character.y = self.y
-                
-        #gravity
-        self.y = self.velocity + self.y
-        self.character.y = self.y
-        
+
         #no movement
         if self.left == False and self.right == False:
             if self.lastDir == 0:
@@ -151,7 +136,6 @@ class Character():
     def coinDetect(self, dt):
         if self.x + self.width >= coins.x and self.x <= coins.x + coins.width:
             if self.y + self.height >= coins.y and self.y <= coins.y + coins.height:
-                print(coins.normalCoin)
                 if coins.normalCoin == True:
                     self.normalColor = True
                     self.points+=1
@@ -159,6 +143,7 @@ class Character():
                 else:
                     self.normalColor = False
                     self.points-=20
+                    coins.spawn(self.points)
                     
     def spiderSense(self, dt): #left and right detection
         if self.x <= 0:
