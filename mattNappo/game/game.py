@@ -16,23 +16,28 @@ class Laser():
         self.y = y
         self.left = False
         self.right = False
-        self.img = [pyglet.image.load("img/laser.png"), pyglet.image.load("img/laser.png")]
+        self.img = [pyglet.image.load("img/rightLaser.png"), pyglet.image.load("img/leftLaser.png")]
         self.lasers = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
         self.detected = False
     def detect(self):
-        pass
+        if self.x <= 0:
+            lasers.remove(self)
+        if self.x >= 1440:
+            lasers.remove(self)
     def move(self):
         if self.left == True:
             self.lasers = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
-            self.x = self.x - 5
+            self.x = self.x - 10
             self.lasers.x = self.x
         if self.right == True:
             self.lasers = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
-            self.x = self.x + 5
+            self.x = self.x + 10
             self.lasers.x = self.x
-        if self.x == 578:
-            lasers.remove(self)
-            
+def moveLaser(dt):
+    if lasers:
+        for laser in lasers:
+            laser.move()
+            laser.detect()
 class Coin():
     def __init__(self):
         self.value = 1
@@ -112,11 +117,11 @@ class Character():
         #DETECTION
         for i in range(len(platforms)):
             if self.x >= platforms[i].x and self.x <= platforms[i].x + platforms[i].length:
-                if self.y <= platforms[i].y + 4 and self.y >= platforms[i].y - 10:
+                if self.y <= platforms[i].y + 4 and self.y >= platforms[i].y - 11:
                     self.velocity = 0
                     self.y = platforms[i].y
                     self.character.y = self.y
-
+        
         #no movement
         if self.left == False and self.right == False:
             if self.lastDir == 0:
@@ -163,8 +168,8 @@ class Character():
             self.character.x = self.x
             self.lastDir = 1
     def coinDetect(self, dt):
-        if self.x + self.width >= coins.x and self.x <= coins.x + coins.width:
-            if self.y + self.height >= coins.y and self.y <= coins.y + coins.height:
+        if self.x + self.width - 5 >= coins.x and self.x <= coins.x + coins.width - 5:
+            if self.y + self.height - 5 >= coins.y and self.y <= coins.y + coins.height -5:
                 if coins.normalCoin == True:
                     self.normalColor = True
                     self.points+=1
@@ -191,6 +196,8 @@ char = Character(45, 175)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
 
+lasers = []
+
 @window.event
 def on_draw():
     window.clear()
@@ -201,31 +208,44 @@ def on_draw():
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
     points.draw()
     coins.spr.draw()
+    for x in range(len(lasers)):
+        lasers[x].lasers.draw()
+    
+        
 @window.event
 def on_key_press(symbol, modifiers):
-    '''if symbol == key.W:
-        char.up = True
-    if symbol == key.S:
-        char.down = True'''
     if symbol == key.A:
         char.left = True
     if symbol == key.D:
         char.right = True
     if symbol == key.SPACE:
         char.up = True
+    if symbol == key.E:
+        pass
 
 @window.event
+def on_mouse_press(x, y, button, modifiers):
+    if button == pyglet.window.mouse.LEFT:
+        laser = Laser(char.x, char.y)
+        if not(char.left or char.right):
+            pass
+        elif char.left == True:
+            laser.left = True
+            laser.x -= laser.width
+        elif char.right == True:
+            laser.right = True
+            laser.x += char.width
+        if laser.left or laser.right:
+            lasers.append(laser)
+@window.event
 def on_key_release(symbol, modifiers):
-    '''if symbol == key.W:
-        char.up = False
-    if symbol == key.S:
-        char.down = False'''
     if symbol == key.A:
         char.left = False
     if symbol == key.D:
         char.right = False
     if symbol == key.SPACE:
         char.up = False
+pyglet.clock.schedule_interval(moveLaser, 1/60.0)
 pyglet.clock.schedule_interval(char.move, 1/60.0)
 pyglet.clock.schedule_interval(char.spiderSense, 1/60.0)
 pyglet.clock.schedule_interval(char.coinDetect, 1/60.0)
