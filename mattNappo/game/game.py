@@ -9,6 +9,30 @@ class Background():
         self.img = pyglet.image.load("img/background.jpg") 
         self.background = pyglet.sprite.Sprite(self.img, x=0, y=0)
 
+class Laser():
+    def __init__(self, x, y):
+        self.width = 50
+        self.x = x
+        self.y = y
+        self.left = False
+        self.right = False
+        self.img = [pyglet.image.load("img/laser.png"), pyglet.image.load("img/laser.png")]
+        self.lasers = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+        self.detected = False
+    def detect(self):
+        pass
+    def move(self):
+        if self.left == True:
+            self.lasers = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
+            self.x = self.x - 5
+            self.lasers.x = self.x
+        if self.right == True:
+            self.lasers = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+            self.x = self.x + 5
+            self.lasers.x = self.x
+        if self.x == 578:
+            lasers.remove(self)
+            
 class Coin():
     def __init__(self):
         self.value = 1
@@ -35,7 +59,6 @@ class Coin():
             self.spr = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
             self.spr.x = self.x
             self.spr.y = self.y
-            
 
 coins = Coin()
 coins.spawn(0)
@@ -46,21 +69,22 @@ class Platform():
         self.y = y
         self.length = length
         
-p1 = Platform(467, 299, 435) # center
+p1 = Platform(467, 299, 450) # center
 p2 = Platform(0, 299, 190) # left
 p3 = Platform(1175, 299, 185) # right
 p4 = Platform(0, 179, 1440) # ground
 p5 = Platform(910, 433, 255) #  upper right
 p6 = Platform(200, 433, 260) # upper left
-platforms = [p1, p2, p3, p4, p5, p6]
-
+p7 = Platform(447, 588, 470) # upper center
+platforms = [p1, p2, p3, p4, p5, p6, p7]
+background = Background()
 class Character():
     def __init__(self, xx, yy):
         self.x = xx
         self.y = yy
         self.health = 100
         self.amount = 7.5
-        self.points = 19
+        self.points = 0
         self.velocity = 0
         self.normalColor = True
         self.up = False
@@ -70,9 +94,14 @@ class Character():
         self.lastDir = None
         self.width = 80
         self.height = 80
-        self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png")]
+        self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png"), pyglet.image.load("img/nothing.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
+        if self.health <= 0:
+            background.img = pyglet.image.load("img/gameOver.jpg")
+            background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
+            coins = None
+            self.character = pyglet.sprite.Sprite(self.img[2], x=self.x, y=self.y)
         #gravity
         self.velocity = self.velocity - .4
         if self.velocity < -8:
@@ -157,7 +186,7 @@ class Character():
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
-background = Background()
+
 char = Character(45, 175)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
