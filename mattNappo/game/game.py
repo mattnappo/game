@@ -4,11 +4,11 @@ import random, time
 from os import system
 from pyglet.libs.win32.libwintab import CTX_SYSORGX
 
+lasers = []
 class Background():
     def __init__(self):
         self.img = pyglet.image.load("img/background.jpg") 
         self.background = pyglet.sprite.Sprite(self.img, x=0, y=0)
-
 class Laser():
     def __init__(self, x, y):
         self.width = 50
@@ -33,6 +33,9 @@ class Laser():
             self.lasers = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
             self.x = self.x + 10
             self.lasers.x = self.x
+
+
+
 def moveLaser(dt):
     if lasers:
         for laser in lasers:
@@ -82,6 +85,7 @@ p5 = Platform(910, 433, 255) #  upper right
 p6 = Platform(200, 433, 260) # upper left
 p7 = Platform(447, 588, 470) # upper center
 platforms = [p1, p2, p3, p4, p5, p6, p7]
+
 background = Background()
 class Character():
     def __init__(self, xx, yy):
@@ -106,14 +110,14 @@ class Character():
             background.img = pyglet.image.load("img/gameOver.jpg")
             background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
             coins = None
-            self.character = pyglet.sprite.Sprite(self.img[2], x=self.x, y=self.y)
+            self.character = None
         #gravity
         self.velocity = self.velocity - .4
         if self.velocity < -8:
             self.velocity = -8
         self.y = self.velocity + self.y
         self.character.y = self.y
-        print("y: ", str(self.y), "vel: ", str(self.velocity))
+        #print("y: ", str(self.y), "vel: ", str(self.velocity))
         #DETECTION
         for i in range(len(platforms)):
             if self.x >= platforms[i].x and self.x <= platforms[i].x + platforms[i].length:
@@ -184,19 +188,62 @@ class Character():
             self.health-=1
             self.x = 2
             self.character.x = self.x
-        elif self.x >= 1355:
+        elif self.x >= 1356:
             self.health-=1
-            self.x = 1357
+            self.x = 1358
             self.character.x = self.x
+
+class Enemy():
+    def __init__(self):
+        self.x = 0
+        self.y = 0
+        self.health = 50
+        self.width = 80
+        self.height = 80
+        self.lookingLeft = True
+        self.img = [pyglet.image.load("img/spr/enemy/right.png"), pyglet.image.load("img/spr/enemy/left.png")]
+        self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+    def spawn(self):
+        possibleY = [299,299,299,179,433,443,588]
+        place = random.randint(0, 3)
+        self.y = possibleY[place]
+        possibleX = [random.randint(467,467+450),random.randint(0,0+299),random.randint(1175,1175+185),random.randint(0,1440),random.randint(910,910+255),random.randint(200,200+260),random.randint(447,447+470)]
+        self.x = possibleX[place]
+        if self.x >= 720:
+            self.lookingLeft = True
+            self.character = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
+        else:
+            self.lookingRight = False
+        self.character.x = self.x
+        self.character.y = self.y
+    def detectLaser(self, dt):
+        if char.x + char.width >= self.x and char.x <= self.x + self.width:# Detect character
+            if char.y + char.height >= self.y and char.y <= self.y + self.height:
+                char.health-=2
+
+        if len(lasers) != 0: # detect laser
+            for i in range(len(lasers)):
+                if lasers[i].x >= self.x and lasers[i].x <= self.x + self.width:
+                    if lasers[i].y >= self.y and lasers[i].y <= self.y + self.height:
+                        if self.health <= 0:
+                            self.health = 50
+                            self.spawn()
+                        else: 
+                            self.health-=1
+                            print(self.health)
+                            
+enemy = Enemy()
+enemy.spawn()
+
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
-
 char = Character(45, 175)
+
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
 
-lasers = []
+enemies = []
 
 @window.event
 def on_draw():
@@ -207,11 +254,11 @@ def on_draw():
     health.draw()
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
     points.draw()
+    enemy.character.draw()
     coins.spr.draw()
     for x in range(len(lasers)):
         lasers[x].lasers.draw()
-    
-        
+
 @window.event
 def on_key_press(symbol, modifiers):
     if symbol == key.A:
@@ -220,15 +267,27 @@ def on_key_press(symbol, modifiers):
         char.right = True
     if symbol == key.SPACE:
         char.up = True
-    if symbol == key.E:
-        pass
-
+def enemyFire(dt):
+    laser = Laser(enemy.x, enemy.y)
+    if enemy.lookingLeft == True:
+        laser.left = True
+        laser.x -= laser.width
+    elif enemy.lookingLeft == False:
+        laser.right = True
+        laser.x += enemy.width
+    if laser.left or laser.right:
+        lasers.append(laser)
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pyglet.window.mouse.LEFT:
         laser = Laser(char.x, char.y)
         if not(char.left or char.right):
-            pass
+            if char.lastDir == False:
+                laser.left = True
+                laser.x -= laser.width
+            else:
+                laser.right = True
+                laser.x += char.width
         elif char.left == True:
             laser.left = True
             laser.x -= laser.width
@@ -237,6 +296,7 @@ def on_mouse_press(x, y, button, modifiers):
             laser.x += char.width
         if laser.left or laser.right:
             lasers.append(laser)
+
 @window.event
 def on_key_release(symbol, modifiers):
     if symbol == key.A:
@@ -249,4 +309,6 @@ pyglet.clock.schedule_interval(moveLaser, 1/60.0)
 pyglet.clock.schedule_interval(char.move, 1/60.0)
 pyglet.clock.schedule_interval(char.spiderSense, 1/60.0)
 pyglet.clock.schedule_interval(char.coinDetect, 1/60.0)
+pyglet.clock.schedule_interval(enemy.detectLaser, 1/60.0)
+#pyglet.clock.schedule_interval(enemyFire, 1/60.0)
 pyglet.app.run()
