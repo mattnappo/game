@@ -1,8 +1,6 @@
-import pyglet, webbrowser
+import pyglet
 from pyglet.window import key
-import random, time
-from os import system
-from pyglet.libs.win32.libwintab import CTX_SYSORGX
+import random
 
 lasers = []
 class Background():
@@ -12,6 +10,7 @@ class Background():
 class Laser():
     def __init__(self, x, y):
         self.width = 50
+        self.height = 14
         self.x = x
         self.y = y
         self.left = False
@@ -217,10 +216,13 @@ class Enemy():
         self.character.x = self.x
         self.character.y = self.y
     def detectLaser(self, dt):
+<<<<<<< HEAD
         if char.x + char.width >= self.x and char.x <= self.x + self.width:# Detect character
             if char.y + char.height >= self.y and char.y <= self.y + self.height:
                 char.health-=2
 
+=======
+>>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
         if len(lasers) != 0: # detect laser
             for i in range(len(lasers)):
                 if lasers[i].x >= self.x and lasers[i].x <= self.x + self.width:
@@ -231,13 +233,20 @@ class Enemy():
                         else: 
                             self.health-=1
                             print(self.health)
+<<<<<<< HEAD
                             
+=======
+>>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 enemy = Enemy()
 enemy.spawn()
 
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
+<<<<<<< HEAD
+=======
+global char
+>>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 char = Character(45, 175)
 
 keys = key.KeyStateHandler()
@@ -277,6 +286,25 @@ def enemyFire(dt):
         laser.x += enemy.width
     if laser.left or laser.right:
         lasers.append(laser)
+<<<<<<< HEAD
+=======
+def enemyKill(dt): # checks if enemy laser hits character
+    global char
+    if len(lasers) != 0: # detect laser
+        for i in range(len(lasers)): 
+            if char.x + char.width >= lasers[i].x and char.x <= lasers[i].x + lasers[i].width:
+                if char.y + char.height >= lasers[i].y and char.y <= lasers[i].y + lasers[i].height:
+                    char.health-=10
+def melee(dt): # checks enemy hitting character
+    global char
+    if char.x + char.width >= enemy.x and char.x <= enemy.x + enemy.width:# Detect character
+        if char.y + char.height >= enemy.y and char.y <= enemy.y + enemy.height:
+            char.health-=2
+def dead(dt):
+    global char
+    if char.health <= 0:
+        
+>>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pyglet.window.mouse.LEFT:
@@ -310,5 +338,11 @@ pyglet.clock.schedule_interval(char.move, 1/60.0)
 pyglet.clock.schedule_interval(char.spiderSense, 1/60.0)
 pyglet.clock.schedule_interval(char.coinDetect, 1/60.0)
 pyglet.clock.schedule_interval(enemy.detectLaser, 1/60.0)
+<<<<<<< HEAD
 #pyglet.clock.schedule_interval(enemyFire, 1/60.0)
+=======
+pyglet.clock.schedule_interval(enemyKill, 1/60.0)
+pyglet.clock.schedule_interval(enemyFire, 1/0.8)
+pyglet.clock.schedule_interval(melee, 1/60.0)
+>>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 pyglet.app.run()
