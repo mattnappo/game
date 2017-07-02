@@ -1,6 +1,8 @@
-import pyglet
+import pyglet, webbrowser
 from pyglet.window import key
-import random
+import random, time
+from os import system
+from pyglet.libs.win32.libwintab import CTX_SYSORGX
 
 lasers = []
 class Background():
@@ -105,11 +107,6 @@ class Character():
         self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png"), pyglet.image.load("img/nothing.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def move(self, dt):
-        if self.health <= 0:
-            background.img = pyglet.image.load("img/gameOver.jpg")
-            background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
-            coins = None
-            self.character = None
         #gravity
         self.velocity = self.velocity - .4
         if self.velocity < -8:
@@ -216,13 +213,6 @@ class Enemy():
         self.character.x = self.x
         self.character.y = self.y
     def detectLaser(self, dt):
-<<<<<<< HEAD
-        if char.x + char.width >= self.x and char.x <= self.x + self.width:# Detect character
-            if char.y + char.height >= self.y and char.y <= self.y + self.height:
-                char.health-=2
-
-=======
->>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
         if len(lasers) != 0: # detect laser
             for i in range(len(lasers)):
                 if lasers[i].x >= self.x and lasers[i].x <= self.x + self.width:
@@ -233,20 +223,13 @@ class Enemy():
                         else: 
                             self.health-=1
                             print(self.health)
-<<<<<<< HEAD
-                            
-=======
->>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 enemy = Enemy()
 enemy.spawn()
 
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
-<<<<<<< HEAD
-=======
 global char
->>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 char = Character(45, 175)
 
 keys = key.KeyStateHandler()
@@ -286,8 +269,6 @@ def enemyFire(dt):
         laser.x += enemy.width
     if laser.left or laser.right:
         lasers.append(laser)
-<<<<<<< HEAD
-=======
 def enemyKill(dt): # checks if enemy laser hits character
     global char
     if len(lasers) != 0: # detect laser
@@ -303,8 +284,9 @@ def melee(dt): # checks enemy hitting character
 def dead(dt):
     global char
     if char.health <= 0:
-        
->>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
+        platforms = []
+        background.img = pyglet.image.load("img/gameOver.jpg")
+        background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pyglet.window.mouse.LEFT:
@@ -338,11 +320,7 @@ pyglet.clock.schedule_interval(char.move, 1/60.0)
 pyglet.clock.schedule_interval(char.spiderSense, 1/60.0)
 pyglet.clock.schedule_interval(char.coinDetect, 1/60.0)
 pyglet.clock.schedule_interval(enemy.detectLaser, 1/60.0)
-<<<<<<< HEAD
-#pyglet.clock.schedule_interval(enemyFire, 1/60.0)
-=======
 pyglet.clock.schedule_interval(enemyKill, 1/60.0)
 pyglet.clock.schedule_interval(enemyFire, 1/0.8)
 pyglet.clock.schedule_interval(melee, 1/60.0)
->>>>>>> branch 'master' of https://xxMattnappo@bitbucket.org/xxMattnappo/summertechweeka2017.git
 pyglet.app.run()
