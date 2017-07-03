@@ -1,8 +1,6 @@
-import pyglet, webbrowser
+import pyglet
 from pyglet.window import key
-import random, time
-from os import system
-from pyglet.libs.win32.libwintab import CTX_SYSORGX
+import random
 
 lasers = []
 class Background():
@@ -178,7 +176,7 @@ class Character():
                     self.normalColor = False
                     self.points-=20
                     coins.spawn(self.points)
-                    
+                    self.health = 100
     def spiderSense(self, dt): #left and right detection
         if self.x <= 0:
             self.health-=1
@@ -193,10 +191,10 @@ class Enemy():
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.health = 50
+        self.health = 25
         self.width = 80
         self.height = 80
-        self.lookingLeft = True
+        self.direction = ""
         self.img = [pyglet.image.load("img/spr/enemy/right.png"), pyglet.image.load("img/spr/enemy/left.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def spawn(self):
@@ -205,11 +203,12 @@ class Enemy():
         self.y = possibleY[place]
         possibleX = [random.randint(467,467+450),random.randint(0,0+299),random.randint(1175,1175+185),random.randint(0,1440),random.randint(910,910+255),random.randint(200,200+260),random.randint(447,447+470)]
         self.x = possibleX[place]
-        if self.x >= 720:
-            self.lookingLeft = True
+        if self.x >= char.x:
+            self.direction = "left"
             self.character = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
-        else:
-            self.lookingRight = False
+        elif self.x <= char.x:
+            self.direction = "right"
+            self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
         self.character.x = self.x
         self.character.y = self.y
     def detectLaser(self, dt):
@@ -219,18 +218,19 @@ class Enemy():
                     if lasers[i].y >= self.y and lasers[i].y <= self.y + self.height:
                         if self.health <= 0:
                             self.health = 50
+                            char.points+=2
                             self.spawn()
                         else: 
                             self.health-=1
-                            print(self.health)
-enemy = Enemy()
-enemy.spawn()
 
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
 global char
 char = Character(45, 175)
+
+enemy = Enemy()
+enemy.spawn()
 
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
@@ -259,13 +259,16 @@ def on_key_press(symbol, modifiers):
         char.right = True
     if symbol == key.SPACE:
         char.up = True
+        
 def enemyFire(dt):
     laser = Laser(enemy.x, enemy.y)
-    if enemy.lookingLeft == True:
-        laser.left = True
-        laser.x -= laser.width
-    elif enemy.lookingLeft == False:
+    if enemy.direction == "right":
+        enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
         laser.right = True
+        laser.x -= laser.width
+    elif enemy.direction == "left":
+        enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
+        laser.left = True
         laser.x += enemy.width
     if laser.left or laser.right:
         lasers.append(laser)
@@ -275,9 +278,7 @@ def enemyKill(dt): # checks if enemy laser hits character
         for i in range(len(lasers)): 
             if char.x + char.width >= lasers[i].x and char.x <= lasers[i].x + lasers[i].width:
                 if char.y + char.height >= lasers[i].y and char.y <= lasers[i].y + lasers[i].height:
-                    char.health-=10
-def melee(dt): # checks enemy hitting character
-    global char
+                    char.health-=1
     if char.x + char.width >= enemy.x and char.x <= enemy.x + enemy.width:# Detect character
         if char.y + char.height >= enemy.y and char.y <= enemy.y + enemy.height:
             char.health-=2
@@ -287,6 +288,16 @@ def dead(dt):
         platforms = []
         background.img = pyglet.image.load("img/gameOver.jpg")
         background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
+        char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
+        coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
+def changeEnemyLocation(dt):
+    if enemy.x >= char.x:
+        enemy.direction = "left"
+        enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
+    elif enemy.x <= char.x:
+        enemy.direction = "right"
+        enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
+
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pyglet.window.mouse.LEFT:
@@ -306,7 +317,6 @@ def on_mouse_press(x, y, button, modifiers):
             laser.x += char.width
         if laser.left or laser.right:
             lasers.append(laser)
-
 @window.event
 def on_key_release(symbol, modifiers):
     if symbol == key.A:
@@ -321,6 +331,7 @@ pyglet.clock.schedule_interval(char.spiderSense, 1/60.0)
 pyglet.clock.schedule_interval(char.coinDetect, 1/60.0)
 pyglet.clock.schedule_interval(enemy.detectLaser, 1/60.0)
 pyglet.clock.schedule_interval(enemyKill, 1/60.0)
+pyglet.clock.schedule_interval(dead, 1/60.0)
 pyglet.clock.schedule_interval(enemyFire, 1/0.8)
-pyglet.clock.schedule_interval(melee, 1/60.0)
+pyglet.clock.schedule_interval(changeEnemyLocation, 1/60.0)
 pyglet.app.run()
