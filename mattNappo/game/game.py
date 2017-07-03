@@ -8,18 +8,29 @@ runAnimation = False
 
 global indexio
 indexio = 0
+global arrImages
+
+global leftArrImages
+leftArrImages = []
 arrImages=[]
+
 for i in range(4):
     tmpImg = pyglet.image.load("img/spr/anim/step"+str(i)+".png")
-    spr = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
-    arrImages.append(spr)
+    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
+    arrImages.append(runSprite)
+    
+for i in range(4):
+    tmpImg = pyglet.image.load("img/spr/anim/left/step"+str(i)+".png")
+    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
+    leftArrImages.append(runSprite)
+    
 def updateIndex(dt):
     global indexio
     if runAnimation == True:
         if indexio < 3:
             indexio+=1
         else:
-                indexio = 0
+            indexio = 0
     
 class Background():
     def __init__(self):
@@ -51,7 +62,6 @@ class Laser():
             self.lasers = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
             self.x = self.x + 10
             self.lasers.x = self.x
-
 def moveLaser():
     if lasers:
         for laser in lasers:
@@ -83,16 +93,13 @@ class Coin():
             self.spr = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
             self.spr.x = self.x
             self.spr.y = self.y
-
 coins = Coin()
 coins.spawn(0)
-
 class Platform():
     def __init__(self, x, y, length):
         self.x = x
         self.y = y
         self.length = length
-        
 p1 = Platform(467, 299, 450) # center
 p2 = Platform(0, 299, 190) # left
 p3 = Platform(1175, 299, 185) # right
@@ -101,10 +108,11 @@ p5 = Platform(910, 433, 255) #  upper right
 p6 = Platform(200, 433, 260) # upper left
 p7 = Platform(447, 588, 470) # upper center
 platforms = [p1, p2, p3, p4, p5, p6, p7]
-
 background = Background()
 class Character():
     def __init__(self, xx, yy):
+        '''global arrImages
+        global leftArrImagess'''
         self.x = xx
         self.y = yy
         self.health = 100
@@ -119,16 +127,17 @@ class Character():
         self.lastDir = None
         self.width = 80
         self.height = 80
-        self.img = [pyglet.image.load("img/spr/right.png"), pyglet.image.load("img/spr/left.png"), pyglet.image.load("img/nothing.png")]
-        self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+        '''self.rightAnimSprites = arrImages
+        self.leftAnimSprites = leftArrImages'''
+        self.character = pyglet.image.load("img/spr/right.png")
     def move(self):
+        global runAnimation
         #gravity
         self.velocity = self.velocity - .4
         if self.velocity < -8:
             self.velocity = -8
         self.y = self.velocity + self.y
         self.character.y = self.y
-        #print("y: ", str(self.y), "vel: ", str(self.velocity))
         #DETECTION
         for i in range(len(platforms)):
             if self.x >= platforms[i].x and self.x <= platforms[i].x + platforms[i].length:
@@ -136,24 +145,17 @@ class Character():
                     self.velocity = 0
                     self.y = platforms[i].y
                     self.character.y = self.y
-        
         #no movement
         if self.left == False and self.right == False:
+            runAnimation = False
             if self.lastDir == 0:
                 if self.normalColor == True:
                     spr = pyglet.image.load("img/spr/left.png")
-                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
-                else:
-                    spr = pyglet.image.load("img/spr/green/left.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             elif self.lastDir == 1:
                 if self.normalColor == True:
                     spr = pyglet.image.load("img/spr/right.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
-                else:
-                    spr = pyglet.image.load("img/spr/green/right.png")
-                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
-                
         #jump
         if self.up == True:
             if(self.velocity == 0):
@@ -163,23 +165,10 @@ class Character():
         
         #left and right movement
         if self.left == True:
-            if self.normalColor == True:
-                runAnimation = True
-                '''spr = pyglet.image.load("img/spr/runLeft.png")
-                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)'''
-            else:
-                spr = pyglet.image.load("img/spr/green/runLeft.png")
-                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             self.x = self.x - self.amount
             self.character.x = self.x
             self.lastDir = 0
         if self.right == True:
-            if self.normalColor == True:
-                spr = pyglet.image.load("img/spr/runRight.png")
-                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
-            else:
-                spr = pyglet.image.load("img/spr/green/runRight.png")
-                self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             self.x = self.x + self.amount
             self.character.x = self.x
             self.lastDir = 1
@@ -205,12 +194,20 @@ class Character():
             self.x = 1358
             self.character.x = self.x
 
-class Enemy():
+class Enemy(Character):
     def __init__(self):
         self.x = 0
         self.y = 0
         self.health = 25
         self.width = 80
+        self.left = False
+        self.lastDir = None
+        self.amount = 4
+        self.up = False
+        self.down = False
+        self.right = False
+        self.velocity = 0
+        self.normalColor = True
         self.height = 80
         self.direction = ""
         self.img = [pyglet.image.load("img/spr/enemy/right.png"), pyglet.image.load("img/spr/enemy/left.png")]
@@ -240,7 +237,7 @@ class Enemy():
                                 char.points+=2
                                 self.spawn()
                             else: 
-                                self.health-=1        
+                                self.health-=1
 
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
@@ -258,13 +255,18 @@ enemies = []
 
 @window.event
 def on_draw():
+    global indexio
+    global animSprites
+    global leftAnimSprites
     window.clear()
     background.background.draw()
-    char.character.draw()
-    global indexio
-    print(indexio)
-    img = arrImages[indexio]
-    img.draw()
+    #char.character.draw()
+    if char.lastDir == 1:
+        char.character = arrImages[indexio]
+        char.character.draw()
+    else:
+        char.character = leftArrImages[indexio]
+        char.character.draw()
     health = pyglet.text.Label("Health: " + str(char.health), font_name='Times New Roman', font_size=36, x=20, y=20)
     health.draw()
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
@@ -276,13 +278,15 @@ def on_draw():
 
 @window.event
 def on_key_press(symbol, modifiers):
+    global runAnimation
     if symbol == key.A:
         char.left = True
+        runAnimation = True
     if symbol == key.D:
         char.right = True
+        runAnimation = True
     if symbol == key.SPACE:
         char.up = True
-        
 def enemyFire(dt):
     laser = Laser(enemy.x, enemy.y)
     if enemy.direction == "right":
@@ -318,9 +322,13 @@ def dead():
 def changeEnemyLocation():
     if enemy.x >= char.x:
         enemy.direction = "left"
+        enemy.right = False
+        enemy.left = True
         enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
     elif enemy.x <= char.x:
         enemy.direction = "right"
+        enemy.left = False
+        enemy.right = True
         enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
 
 @window.event
@@ -349,15 +357,19 @@ def on_mouse_press(x, y, button, modifiers):
             lasers.append(laser)
 @window.event
 def on_key_release(symbol, modifiers):
+    global runAnimation
     if symbol == key.A:
         char.left = False
+        runAnimation = False
     if symbol == key.D:
         char.right = False
+        runAnimation = False
     if symbol == key.SPACE:
         char.up = False
 def deClogger(dt):
     moveLaser()
     char.move()
+    enemy.move()
     char.spiderSense()
     char.coinDetect()
     enemy.detectLaser()
