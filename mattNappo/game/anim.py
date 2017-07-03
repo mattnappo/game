@@ -1,27 +1,27 @@
 import pyglet
-window = pyglet.window.Window(1000,1000)
-counter=.0
+window = pyglet.window.Window(100,100)
+global x
+x = 0
 
-def load_anim():
-    arrImages=[]
-    for i in range(2):
-        tmpImg=pyglet.resource.image("img/spr/anim/step"+str(i)+".png")
-        arrImages.append(tmpImg)
-    return arrImages
+arrImages=[]
+for i in range(4):
+    tmpImg = pyglet.image.load("img/spr/anim/step"+str(i)+".png")
+    spr = pyglet.sprite.Sprite(tmpImg, x=0, y=0)
+    arrImages.append(spr)
 
-def update_frames(dt):
-    global counter
-    counter=(counter+dt)%2
+def updateIndex(dt):
+    global x
+    if x < 3:
+        x+=1
+    else:
+        x = 0
 
 @window.event
 def on_draw():
-    print(counter)
-    pyglet.gl.glClearColor(0,0,0,0)
     window.clear()
-    frames[int(counter)].blit(320,200,0,
-                              frames[int(counter)].width,
-                              frames[int(counter)].height)
+    global x
+    img = arrImages[x]
+    img.draw()
 
-frames = load_anim()
-pyglet.clock.schedule_interval(update_frames,1/100.0)
+pyglet.clock.schedule_interval(updateIndex,1/6)
 pyglet.app.run()
