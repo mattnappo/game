@@ -1,49 +1,28 @@
 import pyglet
 from pyglet.window import key
 import random
-
 lasers = []
 global runAnimation
 runAnimation = False
-
 global indexio
 indexio = 0
-
-
 global leftArrImages
 leftArrImages = []
-
 global arrImages
 arrImages=[]
-
 global yellowLeftArrImages
 yellowLeftArrImages = []
-
 global yellowArrImages
 yellowArrImages=[]
-
-for i in range(4):
-    tmpImg = pyglet.image.load("img/spr/anim/step"+str(i)+".png")
-    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
-    arrImages.append(runSprite)
-    
-for i in range(4):
-    tmpImg = pyglet.image.load("img/spr/anim/left/step"+str(i)+".png")
-    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
-    leftArrImages.append(runSprite)
-    
-    
-    
-for i in range(4):
-    tmpImg = pyglet.image.load("img/spr/anim/yellow/step"+str(i)+".png")
-    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
-    yellowArrImages.append(runSprite)
-    
-for i in range(4):
-    tmpImg = pyglet.image.load("img/spr/anim/yellow/left/step"+str(i)+".png")
-    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
-    yellowLeftArrImages.append(runSprite)
-
+def loader(location, listName):
+    for i in range(4):
+        tmpImg = pyglet.image.load(location+str(i)+".png")
+        runSprite = pyglet.sprite.Sprite(tmpImg, x=0, y=-0)
+        listName.append(runSprite)
+loader("img/spr/anim/step", arrImages)
+loader("img/spr/anim/left/step", leftArrImages)
+loader("img/spr/anim/yellow/step", yellowArrImages)
+loader("img/spr/anim/yellow/left/step", yellowLeftArrImages)
 def updateIndex(dt):
     global indexio
     if runAnimation == True:
@@ -132,8 +111,6 @@ platforms = [p1, p2, p3, p4, p5, p6, p7]
 background = Background()
 class Character():
     def __init__(self, xx, yy):
-        '''global arrImages
-        global leftArrImagess'''
         self.x = xx
         self.y = yy
         self.health = 100
@@ -145,11 +122,9 @@ class Character():
         self.down = False
         self.left = False
         self.right = False
-        self.lastDir = None
+        self.lastDir = 0
         self.width = 80
         self.height = 80
-        '''self.rightAnimSprites = arrImages
-        self.leftAnimSprites = leftArrImages'''
         self.img = pyglet.image.load("img/spr/right.png")
         self.character = pyglet.sprite.Sprite(self.img, x=self.x, y=self.y)
     def move(self):
@@ -169,17 +144,15 @@ class Character():
                     self.character.y = self.y
         #no movement
         if self.left == False and self.right == False:
-            print(self.left)
-            print(self.right)
             runAnimation = False
-            if self.lastDir == 0:
+            if self.lastDir == 1:
                 if self.normalColor == False:
                     spr = pyglet.image.load("img/spr/yellow/right.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
                 else:
                     spr = pyglet.image.load("img/spr/right.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
-            elif self.lastDir == 1:
+            else:
                 if self.normalColor == False:
                     spr = pyglet.image.load("img/spr/yellow/left.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
@@ -194,8 +167,10 @@ class Character():
             self.character.y = self.y
         #down
         if self.down == True:
-            self.y = self.y - 12
-        
+            if self.y > 185:
+                if self.y < 179:
+                    self.y = 179
+                    self.y = self.y - 12
         #left and right movement
         if self.left == True:
             self.x = self.x - self.amount
@@ -259,6 +234,19 @@ class Enemy(Character):
             self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
         self.character.x = self.x
         self.character.y = self.y
+    def wallDetector(self):
+        if self.x <= 5:
+            self.direction = "right"
+            self.right = True
+            self.left = False
+            self.x = 2
+            self.character.x = self.x
+        elif self.x >= 1347:
+            self.direction = "left"
+            self.left = True
+            self.right = False
+            self.x = 1358
+            self.character.x = self.x
     def detectLaser(self):
         if len(lasers) != 0: # detect laser
             for i in range(len(lasers)):
@@ -321,10 +309,7 @@ def on_key_press(symbol, modifiers):
     global yellowRunAnimation
     if symbol == key.A:
         char.left = True
-        if char.normalColor == False:
-            yellowRunAnimation = True
-        else:
-            runAnimation = True
+        runAnimation = True
     if symbol == key.D:
         char.right = True
         runAnimation = True
@@ -390,61 +375,44 @@ def dead():
         background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
         char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
         coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
+def goLeft():
+    enemy.direction = "left"
+    enemy.right = False
+    enemy.left = True
+    enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
+def goRight():
+    enemy.direction = "right"
+    enemy.left = False
+    enemy.right = True
+    enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
 def changeEnemyLocation():
     global platforms
-    if enemy.x > char.x:
-        enemy.direction = "left"
-        enemy.right = False
-        enemy.left = True
-        enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
-    elif enemy.x < char.x:
-        enemy.direction = "right"
-        enemy.left = False
-        enemy.right = True
-        enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
-    print(enemy.x)
-    print(char.x)
-    if enemy.x == char.x:
-        if char.lastDir == 1:
-            enemy.direction = "left"
-            enemy.right = False
-            enemy.left = True
-            enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
+    if char.left == False and char.right == False:
+        if char.lastDir == 0:
+            goRight()
         else:
-            enemy.direction = "right"
-            enemy.left = False
-            enemy.right = True
-            enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
+            goLeft()
+    else:
+        if enemy.x > char.x:
+            goLeft()
+        elif enemy.x < char.x:
+            goRight()
     for z in range(len(platforms)):
         if enemy.x + enemy.width >= platforms[z].x and enemy.x <= platforms[z].x + platforms[z].length:
-            if platforms[z].y - 155 > enemy.y :
+            if platforms[z].y > enemy.y:
                 enemy.up = True
             else:
                 enemy.up = False
-'''@window.event
-def on_mouse_press(x, y, button, modifiers):
-    if button == pyglet.window.mouse.LEFT:
-        laser = Laser(char.x, char.y)
-        laser.firedBy = "character"
-        if not(char.left or char.right):
-            if char.lastDir == False:
-                laser.firedBy = "character"
-                laser.left = True
-                laser.x -= laser.width
-            else:
-                laser.firedBy = "character"
-                laser.right = True
-                laser.x += char.width
-        elif char.left == True:
-            laser.firedBy = "character"
-            laser.left = True
-            laser.x -= laser.width
-        elif char.right == True:
-            laser.firedBy = "character"
-            laser.right = True
-            laser.x += char.width
-        if laser.left or laser.right:
-            lasers.append(laser)'''
+    '''global platforms
+    if enemy.x > char.x:
+        goLeft()
+    elif enemy.x < char.x:
+        goRight()
+    if enemy.x == char.x:
+        if char.lastDir == 1:
+            goLeft()
+        else:
+            goRight()'''
 @window.event
 def on_key_release(symbol, modifiers):
     global runAnimation
@@ -467,6 +435,7 @@ def deClogger(dt):
     enemy.detectLaser()
     enemyKill()
     dead()
+    enemy.wallDetector()
     changeEnemyLocation()
     
 pyglet.clock.schedule_interval(deClogger, 1/60.0)
