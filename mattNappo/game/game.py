@@ -8,11 +8,19 @@ runAnimation = False
 
 global indexio
 indexio = 0
-global arrImages
+
 
 global leftArrImages
 leftArrImages = []
+
+global arrImages
 arrImages=[]
+
+global yellowLeftArrImages
+yellowLeftArrImages = []
+
+global yellowArrImages
+yellowArrImages=[]
 
 for i in range(4):
     tmpImg = pyglet.image.load("img/spr/anim/step"+str(i)+".png")
@@ -24,6 +32,18 @@ for i in range(4):
     runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
     leftArrImages.append(runSprite)
     
+    
+    
+for i in range(4):
+    tmpImg = pyglet.image.load("img/spr/anim/yellow/step"+str(i)+".png")
+    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
+    yellowArrImages.append(runSprite)
+    
+for i in range(4):
+    tmpImg = pyglet.image.load("img/spr/anim/yellow/left/step"+str(i)+".png")
+    runSprite = pyglet.sprite.Sprite(tmpImg, x=45, y=175)
+    yellowLeftArrImages.append(runSprite)
+
 def updateIndex(dt):
     global indexio
     if runAnimation == True:
@@ -31,7 +51,7 @@ def updateIndex(dt):
             indexio+=1
         else:
             indexio = 0
-    
+            
 class Background():
     def __init__(self):
         self.img = pyglet.image.load("img/background.jpg") 
@@ -153,12 +173,18 @@ class Character():
             print(self.right)
             runAnimation = False
             if self.lastDir == 0:
-                if self.normalColor == True:
-                    spr = pyglet.image.load("img/spr/left.png")
+                if self.normalColor == False:
+                    spr = pyglet.image.load("img/spr/yellow/right.png")
+                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                else:
+                    spr = pyglet.image.load("img/spr/right.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
             elif self.lastDir == 1:
-                if self.normalColor == True:
-                    spr = pyglet.image.load("img/spr/right.png")
+                if self.normalColor == False:
+                    spr = pyglet.image.load("img/spr/yellow/left.png")
+                    self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
+                else:
+                    spr = pyglet.image.load("img/spr/left.png")
                     self.character = pyglet.sprite.Sprite(spr, x=self.x, y=self.y)
         #jump
         if self.up == True:
@@ -166,6 +192,9 @@ class Character():
                 self.velocity = 9
             self.y = self.velocity + self.y
             self.character.y = self.y
+        #down
+        if self.down == True:
+            self.y = self.y - 12
         
         #left and right movement
         if self.left == True:
@@ -267,9 +296,15 @@ def on_draw():
     #char.character.draw()
     if char.right == True or char.left == True:
         if char.lastDir == 1:
-            char.character = arrImages[indexio]
+            if char.normalColor == False:
+                char.character = yellowArrImages[indexio]
+            else:
+                char.character = arrImages[indexio]
         else:
-            char.character = leftArrImages[indexio]
+            if char.normalColor == False:
+                char.character = yellowLeftArrImages[indexio]
+            else:
+                char.character = leftArrImages[indexio]
     char.character.draw()
     health = pyglet.text.Label("Health: " + str(char.health), font_name='Times New Roman', font_size=36, x=20, y=20)
     health.draw()
@@ -283,14 +318,44 @@ def on_draw():
 @window.event
 def on_key_press(symbol, modifiers):
     global runAnimation
+    global yellowRunAnimation
     if symbol == key.A:
         char.left = True
-        runAnimation = True
+        if char.normalColor == False:
+            yellowRunAnimation = True
+        else:
+            runAnimation = True
     if symbol == key.D:
         char.right = True
         runAnimation = True
+    if symbol == key.S:
+        char.down = True
     if symbol == key.SPACE:
         char.up = True
+    if symbol == key.J:
+        char.normalColor = False
+    if symbol == key.H:
+        laser = Laser(char.x, char.y)
+        laser.firedBy = "character"
+        if not(char.left or char.right):
+            if char.lastDir == False:
+                laser.firedBy = "character"
+                laser.left = True
+                laser.x -= laser.width
+            else:
+                laser.firedBy = "character"
+                laser.right = True
+                laser.x += char.width
+        elif char.left == True:
+            laser.firedBy = "character"
+            laser.left = True
+            laser.x -= laser.width
+        elif char.right == True:
+            laser.firedBy = "character"
+            laser.right = True
+            laser.x += char.width
+        if laser.left or laser.right:
+            lasers.append(laser)
     if symbol == key.K:
         background.background = pyglet.sprite.Sprite(pyglet.image.load("img/something.jpg"), x=0, y=0)
 def enemyFire(dt):
@@ -356,7 +421,7 @@ def changeEnemyLocation():
                 enemy.up = True
             else:
                 enemy.up = False
-@window.event
+'''@window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pyglet.window.mouse.LEFT:
         laser = Laser(char.x, char.y)
@@ -379,7 +444,7 @@ def on_mouse_press(x, y, button, modifiers):
             laser.right = True
             laser.x += char.width
         if laser.left or laser.right:
-            lasers.append(laser)
+            lasers.append(laser)'''
 @window.event
 def on_key_release(symbol, modifiers):
     global runAnimation
@@ -389,6 +454,10 @@ def on_key_release(symbol, modifiers):
         char.right = False
     if symbol == key.SPACE:
         char.up = False
+    if symbol == key.K:
+        background.background = pyglet.sprite.Sprite(pyglet.image.load("img/background.jpg"))
+    if symbol == key.S:
+        char.down = False
 def deClogger(dt):
     moveLaser()
     char.move()
