@@ -107,6 +107,7 @@ p4 = Platform(0, 179, 1440) # ground
 p5 = Platform(910, 433, 255) #  upper right
 p6 = Platform(200, 433, 260) # upper left
 p7 = Platform(447, 588, 470) # upper center
+global platforms
 platforms = [p1, p2, p3, p4, p5, p6, p7]
 background = Background()
 class Character():
@@ -116,7 +117,7 @@ class Character():
         self.x = xx
         self.y = yy
         self.health = 100
-        self.amount = 7.5
+        self.amount = 7
         self.points = 0
         self.velocity = 0
         self.normalColor = True
@@ -129,7 +130,8 @@ class Character():
         self.height = 80
         '''self.rightAnimSprites = arrImages
         self.leftAnimSprites = leftArrImages'''
-        self.character = pyglet.image.load("img/spr/right.png")
+        self.img = pyglet.image.load("img/spr/right.png")
+        self.character = pyglet.sprite.Sprite(self.img, x=self.x, y=self.y)
     def move(self):
         global runAnimation
         #gravity
@@ -147,6 +149,8 @@ class Character():
                     self.character.y = self.y
         #no movement
         if self.left == False and self.right == False:
+            print(self.left)
+            print(self.right)
             runAnimation = False
             if self.lastDir == 0:
                 if self.normalColor == True:
@@ -198,11 +202,11 @@ class Enemy(Character):
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.health = 25
+        self.health = 15
         self.width = 80
         self.left = False
-        self.lastDir = None
-        self.amount = 4
+        self.lastDir = 0
+        self.amount = 3
         self.up = False
         self.down = False
         self.right = False
@@ -261,12 +265,12 @@ def on_draw():
     window.clear()
     background.background.draw()
     #char.character.draw()
-    if char.lastDir == 1:
-        char.character = arrImages[indexio]
-        char.character.draw()
-    else:
-        char.character = leftArrImages[indexio]
-        char.character.draw()
+    if char.right == True or char.left == True:
+        if char.lastDir == 1:
+            char.character = arrImages[indexio]
+        else:
+            char.character = leftArrImages[indexio]
+    char.character.draw()
     health = pyglet.text.Label("Health: " + str(char.health), font_name='Times New Roman', font_size=36, x=20, y=20)
     health.draw()
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
@@ -287,6 +291,8 @@ def on_key_press(symbol, modifiers):
         runAnimation = True
     if symbol == key.SPACE:
         char.up = True
+    if symbol == key.K:
+        background.background = pyglet.sprite.Sprite(pyglet.image.load("img/something.jpg"), x=0, y=0)
 def enemyFire(dt):
     laser = Laser(enemy.x, enemy.y)
     if enemy.direction == "right":
@@ -320,17 +326,36 @@ def dead():
         char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
         coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
 def changeEnemyLocation():
-    if enemy.x >= char.x:
+    global platforms
+    if enemy.x > char.x:
         enemy.direction = "left"
         enemy.right = False
         enemy.left = True
         enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
-    elif enemy.x <= char.x:
+    elif enemy.x < char.x:
         enemy.direction = "right"
         enemy.left = False
         enemy.right = True
         enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
-
+    print(enemy.x)
+    print(char.x)
+    if enemy.x == char.x:
+        if char.lastDir == 1:
+            enemy.direction = "left"
+            enemy.right = False
+            enemy.left = True
+            enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
+        else:
+            enemy.direction = "right"
+            enemy.left = False
+            enemy.right = True
+            enemy.character = pyglet.sprite.Sprite(enemy.img[0], x=enemy.x, y=enemy.y)
+    for z in range(len(platforms)):
+        if enemy.x + enemy.width >= platforms[z].x and enemy.x <= platforms[z].x + platforms[z].length:
+            if platforms[z].y - 155 > enemy.y :
+                enemy.up = True
+            else:
+                enemy.up = False
 @window.event
 def on_mouse_press(x, y, button, modifiers):
     if button == pyglet.window.mouse.LEFT:
@@ -360,10 +385,8 @@ def on_key_release(symbol, modifiers):
     global runAnimation
     if symbol == key.A:
         char.left = False
-        runAnimation = False
     if symbol == key.D:
         char.right = False
-        runAnimation = False
     if symbol == key.SPACE:
         char.up = False
 def deClogger(dt):
