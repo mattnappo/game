@@ -288,15 +288,24 @@ class HealthBar():
             if int(enemy.health/4) <= 0:
                 enemy.health = 20
                 enemy.spawn()
-        self.x = self.type.x - 23
-        self.y = self.type.y + self.type.height + 10
+        
+        if self.type.isChar == False:
+            self.y = self.type.y + self.type.height + 15
+            self.x = self.type.x - 32
+        else:
+                self.y = self.type.y + self.type.height + 10
+                self.x = self.type.x - 23
         if self.type.isChar == True:
             health = int(self.type.health/20)
+            if int(health/20) > 0:
+                self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
         else:
             health = int(self.type.health/4)
-        #if health != 0:
-        self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
-
+        if health > 0:
+            self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
+        else:
+            dead()
+            self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/0.png"), x=self.x, y=self.y)
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
@@ -332,17 +341,13 @@ def on_draw():
                 char.character = leftArrImages[indexio]
     if enemy.right == True:
         enemy.character = enemyArrImages[eIndex]
-    elif enemy.left== True:
-        enemy.character = leftEnemyArrImages[eIndex]
+    elif enemy.left == True:
+        enemy.character = leftEnemyArrImages[eIndex]     
     enemy.move()
     enemy.character.draw()
     char.move()
     char.character.draw()
-    health = pyglet.text.Label("Health: " + str(char.health), font_name='Times New Roman', font_size=36, x=20, y=20)
-    health.draw()
-    ehealth = pyglet.text.Label("Health: " + str(enemy.health), font_name='Times New Roman', font_size=36, x=20, y=200)
-    ehealth.draw()
-    points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
+    points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=20, y=20)
     points.draw()
     coins.spr.draw()
     enemyHealth.spr.draw()
@@ -422,12 +427,12 @@ def enemyKill(): # checks if enemy laser hits character
             char.health-=2
 def dead():
     global char
-    if char.health <= 0:
-        platforms = []
-        background.img = pyglet.image.load("img/gameOver.jpg")
-        background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
-        char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
-        coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
+    global platforms
+    platforms = []
+    background.img = pyglet.image.load("img/gameOver.jpg")
+    background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
+    char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
+    coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
 def goLeft():
     enemyRunAnimation = True
     enemy.direction = "left"
@@ -487,7 +492,6 @@ def deClogger(dt):
     char.coinDetect()
     enemy.detectLaser()
     enemyKill()
-    dead()
     enemy.wallDetector()
     changeEnemyLocation()
     enemyDeath()
