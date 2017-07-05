@@ -4,8 +4,12 @@ import random
 lasers = []
 global runAnimation
 runAnimation = False
+global runEnemyAnimation
+enemyRunAnimation = True
 global indexio
 indexio = 0
+global eIndex
+eIndex = 0
 global leftArrImages
 leftArrImages = []
 global arrImages
@@ -14,6 +18,10 @@ global yellowLeftArrImages
 yellowLeftArrImages = []
 global yellowArrImages
 yellowArrImages=[]
+global enemyArrImages
+enemyArrImages = []
+global leftEnemyArrImages
+leftEnemyArrImages=[]
 def loader(location, listName):
     for i in range(4):
         tmpImg = pyglet.image.load(location+str(i)+".png")
@@ -23,6 +31,8 @@ loader("img/spr/anim/step", arrImages)
 loader("img/spr/anim/left/step", leftArrImages)
 loader("img/spr/anim/yellow/step", yellowArrImages)
 loader("img/spr/anim/yellow/left/step", yellowLeftArrImages)
+loader("img/spr/anim/enemy/step", enemyArrImages)
+loader("img/spr/anim/enemy/left/step", leftEnemyArrImages)
 def updateIndex(dt):
     global indexio
     if runAnimation == True:
@@ -30,6 +40,13 @@ def updateIndex(dt):
             indexio+=1
         else:
             indexio = 0
+def updateEIndex(dt):
+    global eIndex
+    if enemyRunAnimation == True:
+        if eIndex < 3:
+            eIndex+=1
+        else:
+            eIndex = 0
             
 class Background():
     def __init__(self):
@@ -113,6 +130,7 @@ class Character():
     def __init__(self, xx, yy):
         self.x = xx
         self.y = yy
+        self.isChar = True
         self.health = 100
         self.amount = 7
         self.points = 0
@@ -209,6 +227,7 @@ class Enemy(Character):
         self.health = 20
         self.width = 80
         self.left = False
+        self.isChar = False
         self.lastDir = 0
         self.amount = 3
         self.up = False
@@ -221,6 +240,7 @@ class Enemy(Character):
         self.img = [pyglet.image.load("img/spr/enemy/right.png"), pyglet.image.load("img/spr/enemy/left.png")]
         self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
     def spawn(self):
+        self.health = 20
         possibleY = [299,299,299,179,433,443,588]
         place = random.randint(0, 3)
         self.y = possibleY[place]
@@ -228,10 +248,10 @@ class Enemy(Character):
         self.x = possibleX[place]
         if self.x >= char.x:
             self.direction = "left"
-            self.character = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
+            #self.character = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
         elif self.x <= char.x:
             self.direction = "right"
-            self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+            #self.character = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
         self.character.x = self.x
         self.character.y = self.y
     def wallDetector(self):
@@ -253,23 +273,30 @@ class Enemy(Character):
                 if lasers[i].firedBy == "character":
                     if lasers[i].x >= self.x and lasers[i].x <= self.x + self.width:
                         if lasers[i].y >= self.y and lasers[i].y <= self.y + self.height:
-                            if self.health <= 0:
-                                self.health = 10
-                                char.points+=2
-                                self.spawn()
-                            else: 
-                                self.health-=1
+                            self.health-=1
 class HealthBar():
-    def __init__(self, x, y):
+    def __init__(self, x, y, thingy):
         self.x = x
         self.y = y
+        self.type = thingy
         self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/5.png"), x=self.x, y=self.y)
     def set(self):
-        self.x = enemy.x - 23
-        self.y = enemy.y + enemy.height + 10
-        health = int(enemy.health/4)
+        if self.type.isChar == True:
+            if int(char.health/20) <= 0:
+                dead()
+        else:
+            if int(enemy.health/4) <= 0:
+                enemy.health = 20
+                enemy.spawn()
+        self.x = self.type.x - 23
+        self.y = self.type.y + self.type.height + 10
+        if self.type.isChar == True:
+            health = int(self.type.health/20)
+        else:
+            health = int(self.type.health/4)
+        #if health != 0:
         self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
-enemyHealth = HealthBar(1000,700)
+
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
@@ -278,7 +305,8 @@ char = Character(45, 175)
 
 enemy = Enemy()
 enemy.spawn()
-
+enemyHealth = HealthBar(1000,700, enemy)
+charHealth = HealthBar(1000,700, char)
 keys = key.KeyStateHandler()
 window.push_handlers(keys)
 
@@ -287,8 +315,7 @@ enemies = []
 @window.event
 def on_draw():
     global indexio
-    global animSprites
-    global leftAnimSprites
+    global eIndex
     window.clear()
     background.background.draw()
     #char.character.draw()
@@ -303,6 +330,12 @@ def on_draw():
                 char.character = yellowLeftArrImages[indexio]
             else:
                 char.character = leftArrImages[indexio]
+    if enemy.right == True:
+        enemy.character = enemyArrImages[eIndex]
+    elif enemy.left== True:
+        enemy.character = leftEnemyArrImages[eIndex]
+    enemy.move()
+    enemy.character.draw()
     char.move()
     char.character.draw()
     health = pyglet.text.Label("Health: " + str(char.health), font_name='Times New Roman', font_size=36, x=20, y=20)
@@ -311,9 +344,9 @@ def on_draw():
     ehealth.draw()
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
     points.draw()
-    enemy.character.draw()
     coins.spr.draw()
     enemyHealth.spr.draw()
+    charHealth.spr.draw()
     for x in range(len(lasers)):
         lasers[x].lasers.draw()
 
@@ -371,6 +404,12 @@ def enemyFire(dt):
         laser.x += enemy.width
     if laser.left or laser.right:
         lasers.append(laser)
+def enemyDeath():
+    if enemy.health <= 0:
+        enemy.health = 10
+        char.points+=7
+        enemyHealth.set()
+        enemy.spawn()
 def enemyKill(): # checks if enemy laser hits character
     global char
     if len(lasers) != 0: # detect laser
@@ -390,11 +429,13 @@ def dead():
         char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
         coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
 def goLeft():
+    enemyRunAnimation = True
     enemy.direction = "left"
     enemy.right = False
     enemy.left = True
     enemy.character = pyglet.sprite.Sprite(enemy.img[1], x=enemy.x, y=enemy.y)
 def goRight():
+    enemyRunAnimation = True
     enemy.direction = "right"
     enemy.left = False
     enemy.right = True
@@ -442,7 +483,6 @@ def on_key_release(symbol, modifiers):
         char.down = False
 def deClogger(dt):
     moveLaser()
-    enemy.move()
     char.spiderSense()
     char.coinDetect()
     enemy.detectLaser()
@@ -450,9 +490,12 @@ def deClogger(dt):
     dead()
     enemy.wallDetector()
     changeEnemyLocation()
+    enemyDeath()
     enemyHealth.set()
-    
+    charHealth.set()
+
 pyglet.clock.schedule_interval(deClogger, 1/60.0)
 pyglet.clock.schedule_interval(enemyFire, 1/0.8)
 pyglet.clock.schedule_interval(updateIndex,1/6)
+pyglet.clock.schedule_interval(updateEIndex,1/6)
 pyglet.app.run()
