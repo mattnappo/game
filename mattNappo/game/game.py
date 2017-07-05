@@ -206,7 +206,7 @@ class Enemy(Character):
     def __init__(self):
         self.x = 0
         self.y = 0
-        self.health = 15
+        self.health = 20
         self.width = 80
         self.left = False
         self.lastDir = 0
@@ -254,12 +254,22 @@ class Enemy(Character):
                     if lasers[i].x >= self.x and lasers[i].x <= self.x + self.width:
                         if lasers[i].y >= self.y and lasers[i].y <= self.y + self.height:
                             if self.health <= 0:
-                                self.health = 50
+                                self.health = 10
                                 char.points+=2
                                 self.spawn()
                             else: 
                                 self.health-=1
-
+class HealthBar():
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/5.png"), x=self.x, y=self.y)
+    def set(self):
+        self.x = enemy.x - 23
+        self.y = enemy.y + enemy.height + 10
+        health = int(enemy.health/4)
+        self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
+enemyHealth = HealthBar(1000,700)
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
@@ -293,13 +303,17 @@ def on_draw():
                 char.character = yellowLeftArrImages[indexio]
             else:
                 char.character = leftArrImages[indexio]
+    char.move()
     char.character.draw()
     health = pyglet.text.Label("Health: " + str(char.health), font_name='Times New Roman', font_size=36, x=20, y=20)
     health.draw()
+    ehealth = pyglet.text.Label("Health: " + str(enemy.health), font_name='Times New Roman', font_size=36, x=20, y=200)
+    ehealth.draw()
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=300, y=20)
     points.draw()
     enemy.character.draw()
     coins.spr.draw()
+    enemyHealth.spr.draw()
     for x in range(len(lasers)):
         lasers[x].lasers.draw()
 
@@ -428,7 +442,6 @@ def on_key_release(symbol, modifiers):
         char.down = False
 def deClogger(dt):
     moveLaser()
-    char.move()
     enemy.move()
     char.spiderSense()
     char.coinDetect()
@@ -437,6 +450,7 @@ def deClogger(dt):
     dead()
     enemy.wallDetector()
     changeEnemyLocation()
+    enemyHealth.set()
     
 pyglet.clock.schedule_interval(deClogger, 1/60.0)
 pyglet.clock.schedule_interval(enemyFire, 1/0.8)
