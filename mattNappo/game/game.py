@@ -1,6 +1,6 @@
-import pyglet
+import pyglet, random
+from time import time
 from pyglet.window import key
-import random
 lasers = []
 global runAnimation
 runAnimation = False
@@ -278,36 +278,35 @@ class HealthBar():
     def __init__(self, x, y, thingy):
         self.x = x
         self.y = y
+        self.timeCheck = False
         self.type = thingy
         self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/5.png"), x=self.x, y=self.y)
     def set(self):
+        global t
         if self.type.isChar == True:
-            if int(char.health/20) <= 0:
+            if int(self.type.health/20) <= 0:
                 dead()
-        else:
-            if int(enemy.health/4) <= 0:
-                char.points+=7
-                enemy.health = 20
-                enemy.character = pyglet.sprite.Sprite(pyglet.image.load("img/explosion.png"), x=enemy.x, y=enemy.y)
-                enemy.spawn()
-        
-        if self.type.isChar == False:
-            self.y = self.type.y + self.type.height + 15
-            self.x = self.type.x - 32
-        else:
-                self.y = self.type.y + self.type.height + 10
-                self.x = self.type.x - 23
-        if self.type.isChar == True:
-            health = int(self.type.health/20)
-            if int(health/20) > 0:
+                self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/0.png"), x=self.x, y=self.y)
+            else:
+                health = int(self.type.health/20)
                 self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
+            self.y = self.type.y + self.type.height + 10
+            self.x = self.type.x - 23
         else:
-            health = int(self.type.health/4)
-        if health > 0:
-            self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
-        else:
-            dead()
-            self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/0.png"), x=self.x, y=self.y)
+            if int(self.type.health/4) <= 0:
+                if self.timeCheck == False:
+                    t = time()
+                    self.timeCheck = True
+                    
+                if time() >= t + .2:
+                    char.points+=7
+                    self.type.health = 20
+                    self.type.spawn()
+            else:
+                self.y = self.type.y + self.type.height + 15
+                self.x = self.type.x - 32
+                health = int(self.type.health/4)
+                self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
 window = pyglet.window.Window(1440, 900)
 window.set_caption("Remake of Mario")
 
@@ -329,7 +328,13 @@ def on_draw():
     global eIndex
     window.clear()
     background.background.draw()
-    #char.character.draw()
+    if int(enemy.health/4) <= 0:
+        global enemyRunAnimation
+        enemy.left = False
+        enemy.right = False
+        enemyRunAnimation = False
+        enemy.character = pyglet.sprite.Sprite(pyglet.image.load("img/explosion.png"), x=enemy.x, y=enemy.y)
+        enemy.character.draw()
     if char.right == True or char.left == True:
         if char.lastDir == 1:
             if char.normalColor == False:
@@ -344,7 +349,7 @@ def on_draw():
     if enemy.right == True:
         enemy.character = enemyArrImages[eIndex]
     elif enemy.left == True:
-        enemy.character = leftEnemyArrImages[eIndex]     
+        enemy.character = leftEnemyArrImages[eIndex]
     enemy.move()
     enemy.character.draw()
     char.move()
@@ -411,12 +416,6 @@ def enemyFire(dt):
         laser.x += enemy.width
     if laser.left or laser.right:
         lasers.append(laser)
-'''def enemyDeath():
-    if enemy.health <= 0:
-        enemy.health = 10
-        char.points+=7
-        enemyHealth.set()
-        enemy.spawn()'''
 def enemyKill(): # checks if enemy laser hits character
     global char
     if len(lasers) != 0: # detect laser
@@ -433,7 +432,6 @@ def dead():
     platforms = []
     background.img = pyglet.image.load("img/gameOver.jpg")
     background.background = pyglet.sprite.Sprite(background.img, x=0, y=0)
-    char.character = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
     coins.spr = pyglet.sprite.Sprite(pyglet.image.load("img/nothing.png"), x=0, y=0)
 def goLeft():
     enemyRunAnimation = True
