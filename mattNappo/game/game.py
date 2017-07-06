@@ -286,7 +286,9 @@ class HealthBar():
                 dead()
         else:
             if int(enemy.health/4) <= 0:
+                char.points+=7
                 enemy.health = 20
+                enemy.character = pyglet.sprite.Sprite(pyglet.image.load("img/explosion.png"), x=enemy.x, y=enemy.y)
                 enemy.spawn()
         
         if self.type.isChar == False:
@@ -409,12 +411,12 @@ def enemyFire(dt):
         laser.x += enemy.width
     if laser.left or laser.right:
         lasers.append(laser)
-def enemyDeath():
+'''def enemyDeath():
     if enemy.health <= 0:
         enemy.health = 10
         char.points+=7
         enemyHealth.set()
-        enemy.spawn()
+        enemy.spawn()'''
 def enemyKill(): # checks if enemy laser hits character
     global char
     if len(lasers) != 0: # detect laser
@@ -457,22 +459,37 @@ def changeEnemyLocation():
             goLeft()
         elif enemy.x < char.x:
             goRight()
+    '''for z in range(len(platforms)):
+        if enemy.x + enemy.width >= platforms[z].x and enemy.x <= platforms[z].x + platforms[z].length:
+            if platforms[z].y > enemy.y:
+                enemy.up = True
+            else:
+                enemy.up = False'''
+    
+    '''global platforms
+    if char.left == False and char.right == False: # if character not moving
+        if char.lastDir == 0: # if character facing left
+            if enemy.x < char.x: # if enemy to the left of character
+                goRight()
+            else: # if enemy is to the right of the static character
+                goLeft()
+        else: # if character is static and facing right
+            if enemy.x > char.x: # if enemy is to the right of character
+                goLeft()
+            else: # if enemy is to the left of character
+                goRight()'''
+    '''else:
+        if enemy.x > char.x:
+            goLeft()
+        elif enemy.x < char.x:
+            goRight()
+                
     for z in range(len(platforms)):
         if enemy.x + enemy.width >= platforms[z].x and enemy.x <= platforms[z].x + platforms[z].length:
             if platforms[z].y > enemy.y:
                 enemy.up = True
             else:
-                enemy.up = False
-    '''global platforms
-    if enemy.x > char.x:
-        goLeft()
-    elif enemy.x < char.x:
-        goRight()
-    if enemy.x == char.x:
-        if char.lastDir == 1:
-            goLeft()
-        else:
-            goRight()'''
+                enemy.up = False'''
 @window.event
 def on_key_release(symbol, modifiers):
     global runAnimation
@@ -494,7 +511,7 @@ def deClogger(dt):
     enemyKill()
     enemy.wallDetector()
     changeEnemyLocation()
-    enemyDeath()
+    #enemyDeath()
     enemyHealth.set()
     charHealth.set()
 
