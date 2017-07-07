@@ -1,6 +1,11 @@
 import pyglet, random
 from time import time
 from pyglet.window import key
+pyglet.options['audio'] = ("directsound")
+import pyglet.media
+pyglet.lib.load_library("avbin")
+pyglet.have_avbin=True
+
 lasers = []
 global runAnimation
 runAnimation = False
@@ -24,17 +29,24 @@ global enemyArrImages
 enemyArrImages = []
 global leftEnemyArrImages
 leftEnemyArrImages=[]
-def loader(location, listName):
-    for i in range(4):
+global coinIndex
+coinIndex = 0
+global coinAnimation
+coinAnimation = True
+global coinArrImages
+coinArrImages = []
+def loader(location, listName, amount):
+    for i in range(amount):
         tmpImg = pyglet.image.load(location+str(i)+".png")
         runSprite = pyglet.sprite.Sprite(tmpImg, x=0, y=-0)
         listName.append(runSprite)
-loader("img/spr/anim/step", arrImages)
-loader("img/spr/anim/left/step", leftArrImages)
-loader("img/spr/anim/yellow/step", yellowArrImages)
-loader("img/spr/anim/yellow/left/step", yellowLeftArrImages)
-loader("img/spr/anim/enemy/step", enemyArrImages)
-loader("img/spr/anim/enemy/left/step", leftEnemyArrImages)
+loader("img/spr/anim/step", arrImages, 4)
+loader("img/spr/anim/left/step", leftArrImages, 4)
+loader("img/spr/anim/yellow/step", yellowArrImages, 4)
+loader("img/spr/anim/yellow/left/step", yellowLeftArrImages, 4)
+loader("img/spr/anim/enemy/step", enemyArrImages, 4)
+loader("img/spr/anim/enemy/left/step", leftEnemyArrImages, 4)
+loader("img/coin/anim/", coinArrImages, 6)
 def updateIndex(dt):
     global indexio
     if runAnimation == True:
@@ -49,6 +61,13 @@ def updateEIndex(dt):
             eIndex+=1
         else:
             eIndex = 0
+def updateCoinIndex(dt):
+    global coinIndex
+    if coinAnimation == True:
+        if coinIndex < 5:
+            coinIndex+=1
+        else:
+            coinIndex = 0
 class Background():
     def __init__(self):
         self.img = pyglet.image.load("img/backgrounds/lvl1.jpg") 
@@ -109,27 +128,31 @@ class Coin():
         self.y = 350
         self.height = 75
         self.width = 75
-        self.normalCoin = True
-        self.img = [pyglet.image.load("img/coin.png"), pyglet.image.load("img/green.png")]
+        self.normalCoin = "normal"
+        self.img = [pyglet.image.load("img/coin/normal.png"), pyglet.image.load("img/coin/health.png"), pyglet.image.load("img/coin/speed.png")]
         self.spr = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
+    def updatePos(self):
+        self.spr.x = self.x
+        self.spr.y = self.y
     def spawn(self, points):
         doWhat = random.randint(1, 5)
-        if doWhat > 1:
-            self.normalCoin = True
-            self.x = random.randint(20, 1000)
-            self.y = random.randint(300, 600)
-            self.spr = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
-            self.spr.x = self.x
-            self.spr.y = self.y
+        self.x = random.randint(20, 1000)
+        self.y = random.randint(300, 600)
+        if doWhat > 2:
+            self.normalCoin = "normal"
+            coinAnimation = True
+            #self.spr = pyglet.sprite.Sprite(self.img[0], x=self.x, y=self.y)
         elif doWhat == 1 and points > 20:
-            self.normalCoin = False
-            self.x = random.randint(20, 1000)
-            self.y = random.randint(300, 600)
+            self.normalCoin = "health"
             self.spr = pyglet.sprite.Sprite(self.img[1], x=self.x, y=self.y)
-            self.spr.x = self.x
-            self.spr.y = self.y
+            coinAnimation = False
+        elif doWhat == 2 and points > 20:
+            self.normalCoin = "speed"
+            self.spr = pyglet.sprite.Sprite(self.img[2], x=self.x, y=self.y)
+            coinAnimation = False
+        self.updatePos()
 coins = Coin()
-coins.spawn(0)
+#coins.spawn(0)
 class Platform():
     def __init__(self, x, y, length):
         self.x = x
@@ -152,7 +175,7 @@ class Character():
         self.isChar = True
         self.health = 100
         self.amount = 7
-        self.points = 0
+        self.points = 96
         self.velocity = 0
         self.normalColor = True
         self.up = False
@@ -222,15 +245,18 @@ class Character():
     def coinDetect(self):
         if self.x + self.width - 5 >= coins.x and self.x <= coins.x + coins.width - 5:
             if self.y + self.height - 5 >= coins.y and self.y <= coins.y + coins.height -5:
-                if coins.normalCoin == True:
-                    self.normalColor = True
+                if coins.normalCoin == "normal":
                     self.points+=1
-                    coins.spawn(self.points)
-                else:
-                    self.normalColor = False
-                    self.points-=20
-                    coins.spawn(self.points)
-                    self.health = 100
+                    self.amount = 7
+                elif coins.normalCoin == "health":
+                    if self.health < 90:
+                        self.points-=10
+                        self.amount = 7
+                        self.health = 100
+                elif coins.normalCoin == "speed":
+                    self.amount = 12
+                    self.points-=5
+                coins.spawn(self.points)
     def spiderSense(self): #left and right detection
         if self.x <= 0:
             self.health-=1
@@ -352,6 +378,7 @@ def on_draw():
     global indexio
     global eIndex
     global platforms
+    global coinIndex
     window.clear()
     background.background.draw()
     if int(enemy.health/4) <= 0:
@@ -378,6 +405,10 @@ def on_draw():
         enemy.character = enemyArrImages[eIndex]
     elif enemy.left == True:
         enemy.character = leftEnemyArrImages[eIndex]
+    if coins.normalCoin == "normal":
+        coins.spr = coinArrImages[coinIndex]
+    else:
+        coinAnimation = False
     if char.points >= 100:
         background.background = pyglet.sprite.Sprite(pyglet.image.load("img/backgrounds/lvl2.jpg"), x=0, y=0)
         char.points = 0
@@ -390,7 +421,7 @@ def on_draw():
         p7 = Platform(447, 588, 470) # upper center
         p8 = Platform(980, 670, 287) # upper right
         p9 = Platform(637, 440, 250) # middle center
-        p10 = Platform(220, 670, 200) # upper left
+        p10 = Platform(210, 670, 235) # upper left
         platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
     enemy.move(False)
     enemy.character.draw()
@@ -398,6 +429,7 @@ def on_draw():
     char.character.draw()
     points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=20, y=20)
     points.draw()
+    coins.updatePos()
     coins.spr.draw()
     enemyHealth.spr.draw()
     charHealth.spr.draw()
@@ -426,25 +458,32 @@ def charLaser(powerValue):
         laser.x += char.width
     if laser.left or laser.right:
         lasers.append(laser)
+global timeCheckerr
+timeCheckerr = False
+
+global ti
+ti = 0
 def heavyHit():
     global caller
+    global ti
+    global timeCheckerr
     if caller == True:
-        timeChecker = False
-        if timeChecker == False:
-            t = time()
-            timeChecker = True
-            print("running")
+        
+        if timeCheckerr == False:
+            ti = time()
+            timeCheckerr = True
             #change to load
         else:
-            if time() >= t + .5:
-                print("WORKING")
+            if time() >= ti + .5:
                 charLaser(True)
-                timeChecker = False
+                timeCheckerr = False
                 caller = False
+
 @window.event
 def on_key_press(symbol, modifiers):
     global runAnimation
     global yellowRunAnimation
+    global caller
     if symbol == key.A:
         char.left = True
         runAnimation = True
@@ -458,9 +497,7 @@ def on_key_press(symbol, modifiers):
     if symbol == key.K:
         char.normalColor = False
     if symbol == key.J:
-        charLaser(True)
-        #global caller
-        #caller = True
+        caller = True
     if symbol == key.H:
         charLaser(False)
 def enemyFire(dt):
@@ -566,14 +603,15 @@ def deClogger(dt):
     char.coinDetect()
     enemy.detectLaser()
     enemyKill()
-    enemy.wallDetector()
     heavyHit()
+    enemy.wallDetector()
     changeEnemyLocation()
     enemyHealth.set()
     charHealth.set()
 
 pyglet.clock.schedule_interval(deClogger, 1/60.0)
 pyglet.clock.schedule_interval(enemyFire, 1/0.8)
-pyglet.clock.schedule_interval(updateIndex,1/6)
-pyglet.clock.schedule_interval(updateEIndex,1/6)
+pyglet.clock.schedule_interval(updateIndex, 1/8)
+pyglet.clock.schedule_interval(updateEIndex, 1/6)
+pyglet.clock.schedule_interval(updateCoinIndex, 1/7)
 pyglet.app.run()
