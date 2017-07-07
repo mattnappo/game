@@ -10,6 +10,8 @@ global indexio
 indexio = 0
 global eIndex
 eIndex = 0
+global caller
+caller = False
 global leftArrImages
 leftArrImages = []
 global arrImages
@@ -292,7 +294,11 @@ class Enemy(Character):
                 if lasers[i].firedBy == "character":
                     if lasers[i].x >= self.x and lasers[i].x <= self.x + self.width:
                         if lasers[i].y >= self.y and lasers[i].y <= self.y + self.height:
-                            self.health-=1
+                            if lasers[i].heavy == False:
+                                self.health-=1
+                            else:
+                                print(lasers[i].heavy)
+                                self.health=0
 class HealthBar():
     def __init__(self, x, y, thingy):
         self.x = x
@@ -317,7 +323,7 @@ class HealthBar():
                     t = time()
                     self.timeCheck = True
                 if time() >= t + .5:
-                    char.points+=7
+                    char.points+=7 
                     self.type.health = 20
                     self.type.spawn()
                     self.timeCheck = False
@@ -374,8 +380,18 @@ def on_draw():
         enemy.character = leftEnemyArrImages[eIndex]
     if char.points >= 100:
         background.background = pyglet.sprite.Sprite(pyglet.image.load("img/backgrounds/lvl2.jpg"), x=0, y=0)
-        # enter new platforms here
-        platforms = []
+        char.points = 0
+        p1 = Platform(467, 299, 450) # center
+        p2 = Platform(50, 303, 265) # left
+        p3 = Platform(1100, 299, 265) # right
+        p4 = Platform(0, 179, 1440) # ground
+        p5 = Platform(960, 437, 180) # middle right
+        p6 = Platform(50, 437, 265) # upper left
+        p7 = Platform(447, 588, 470) # upper center
+        p8 = Platform(980, 670, 287) # upper right
+        p9 = Platform(637, 440, 250) # middle center
+        p10 = Platform(220, 670, 200) # upper left
+        platforms = [p1, p2, p3, p4, p5, p6, p7, p8, p9, p10]
     enemy.move(False)
     enemy.character.draw()
     char.move(True)
@@ -410,6 +426,21 @@ def charLaser(powerValue):
         laser.x += char.width
     if laser.left or laser.right:
         lasers.append(laser)
+def heavyHit():
+    global caller
+    if caller == True:
+        timeChecker = False
+        if timeChecker == False:
+            t = time()
+            timeChecker = True
+            print("running")
+            #change to load
+        else:
+            if time() >= t + .5:
+                print("WORKING")
+                charLaser(True)
+                timeChecker = False
+                caller = False
 @window.event
 def on_key_press(symbol, modifiers):
     global runAnimation
@@ -424,35 +455,14 @@ def on_key_press(symbol, modifiers):
         char.down = True
     if symbol == key.SPACE:
         char.up = True
-    if symbol == key.J:
-        char.normalColor = False
-    if symbol == key.L:
-        charLaser(True)
-    if symbol == key.H:
-        '''laser = Laser(char.x, char.y)
-        laser.firedBy = "character"
-        if not(char.left or char.right):
-            if char.lastDir == False:
-                laser.firedBy = "character"
-                laser.left = True
-                laser.x -= laser.width
-            else:
-                laser.firedBy = "character"
-                laser.right = True
-                laser.x += char.width
-        elif char.left == True:
-            laser.firedBy = "character"
-            laser.left = True
-            laser.x -= laser.width
-        elif char.right == True:
-            laser.firedBy = "character"
-            laser.right = True
-            laser.x += char.width
-        if laser.left or laser.right:
-            lasers.append(laser)'''
-        charLaser(False)
     if symbol == key.K:
-        background.background = pyglet.sprite.Sprite(pyglet.image.load("img/backgrounds/something.jpg"), x=0, y=0)
+        char.normalColor = False
+    if symbol == key.J:
+        charLaser(True)
+        #global caller
+        #caller = True
+    if symbol == key.H:
+        charLaser(False)
 def enemyFire(dt):
     laser = Laser(enemy.x, enemy.y, False)
     if enemy.direction == "right":
@@ -548,8 +558,6 @@ def on_key_release(symbol, modifiers):
         char.right = False
     if symbol == key.SPACE:
         char.up = False
-    if symbol == key.K:
-        background.background = pyglet.sprite.Sprite(pyglet.image.load("img/backgrounds/lvl1.jpg"))
     if symbol == key.S:
         char.down = False
 def deClogger(dt):
@@ -559,6 +567,7 @@ def deClogger(dt):
     enemy.detectLaser()
     enemyKill()
     enemy.wallDetector()
+    heavyHit()
     changeEnemyLocation()
     enemyHealth.set()
     charHealth.set()
