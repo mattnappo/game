@@ -1,10 +1,6 @@
 import pyglet, random
 from time import time
 from pyglet.window import key
-pyglet.options['audio'] = ("directsound")
-import pyglet.media
-pyglet.lib.load_library("avbin")
-pyglet.have_avbin=True
 
 lasers = []
 global runAnimation
@@ -175,7 +171,7 @@ class Character():
         self.isChar = True
         self.health = 100
         self.amount = 7
-        self.points = 96
+        self.points = 0
         self.velocity = 0
         self.normalColor = True
         self.up = False
@@ -359,7 +355,7 @@ class HealthBar():
                 health = int(self.type.health/4)
                 self.spr = pyglet.sprite.Sprite(pyglet.image.load("img/health/hearts/"+str(health)+".png"), x=self.x, y=self.y)
 window = pyglet.window.Window(1440, 900)
-window.set_caption("Remake of Mario")
+window.set_caption("Megaman - Matt Nappo")
 
 global char
 char = Character(45, 175)
@@ -409,7 +405,9 @@ def on_draw():
         coins.spr = coinArrImages[coinIndex]
     else:
         coinAnimation = False
-    if char.points >= 100:
+    if char.points < 0:
+        char.points = 0
+    if char.points >= 50:
         background.background = pyglet.sprite.Sprite(pyglet.image.load("img/backgrounds/lvl2.jpg"), x=0, y=0)
         char.points = 0
         p1 = Platform(467, 299, 450) # center
