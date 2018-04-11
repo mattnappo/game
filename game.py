@@ -66,7 +66,7 @@ def updateCoinIndex(dt):
             coinIndex = 0
 class Background():
     def __init__(self):
-        self.img = pyglet.image.load("img/backgrounds/lvl1.jpg") 
+        self.img = pyglet.image.load("img/backgrounds/lvl1.jpg")
         self.background = pyglet.sprite.Sprite(self.img, x=0, y=0)
 class Laser():
     def __init__(self, x, y, heavy):
@@ -78,9 +78,9 @@ class Laser():
         self.heavy = heavy
         self.firedBy = ""
         self.right = False
-        self.img = [pyglet.image.load("img/laser/rightLaser.png"), 
-                    pyglet.image.load("img/laser/leftLaser.png"), 
-                    pyglet.image.load("img/laser/enemy/right.png"), 
+        self.img = [pyglet.image.load("img/laser/rightLaser.png"),
+                    pyglet.image.load("img/laser/leftLaser.png"),
+                    pyglet.image.load("img/laser/enemy/right.png"),
                     pyglet.image.load("img/laser/enemy/left.png"),
                     pyglet.image.load("img/laser/heavy/right.png"),
                     pyglet.image.load("img/laser/heavy/left.png")]
@@ -171,7 +171,7 @@ class Character():
         self.isChar = True
         self.health = 100
         self.amount = 7
-        self.points = 0
+        self.points = 50
         self.velocity = 0
         self.normalColor = True
         self.up = False
@@ -319,7 +319,6 @@ class Enemy(Character):
                             if lasers[i].heavy == False:
                                 self.health-=1
                             else:
-                                print(lasers[i].heavy)
                                 self.health=0
 class HealthBar():
     def __init__(self, x, y, thingy):
@@ -345,7 +344,7 @@ class HealthBar():
                     t = time()
                     self.timeCheck = True
                 if time() >= t + .5:
-                    char.points+=7 
+                    char.points+=7
                     self.type.health = 20
                     self.type.spawn()
                     self.timeCheck = False
@@ -425,7 +424,7 @@ def on_draw():
     enemy.character.draw()
     char.move(True)
     char.character.draw()
-    points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=20, y=20)
+    points = pyglet.text.Label("Points: " + str(char.points), font_name='Times New Roman', font_size=36, x=20, y=850)
     points.draw()
     coins.updatePos()
     coins.spr.draw()
@@ -466,7 +465,7 @@ def heavyHit():
     global ti
     global timeCheckerr
     if caller == True:
-        
+
         if timeCheckerr == False:
             ti = time()
             timeCheckerr = True
@@ -515,7 +514,7 @@ def enemyFire(dt):
 def enemyKill(): # checks if enemy laser hits character
     global char
     if len(lasers) != 0: # detect laser
-        for i in range(len(lasers)): 
+        for i in range(len(lasers)):
             if char.x + char.width >= lasers[i].x and char.x <= lasers[i].x + lasers[i].width:
                 if char.y + char.height >= lasers[i].y and char.y <= lasers[i].y + lasers[i].height:
                     char.health-=1
@@ -559,7 +558,7 @@ def changeEnemyLocation():
                 enemy.up = True
             else:
                 enemy.up = False'''
-    
+
     '''global platforms
     if char.left == False and char.right == False: # if character not moving
         if char.lastDir == 0: # if character facing left
@@ -577,7 +576,7 @@ def changeEnemyLocation():
             goLeft()
         elif enemy.x < char.x:
             goRight()
-                
+
     for z in range(len(platforms)):
         if enemy.x + enemy.width >= platforms[z].x and enemy.x <= platforms[z].x + platforms[z].length:
             if platforms[z].y > enemy.y:
