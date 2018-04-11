@@ -19,3 +19,6 @@ Cool 2D Python game made with the Pyglet library
 # Enemies
 * Killing an enemy increases score by 7 points
 * Colliding with an enemy reduces health rapidly
+## Other
+* Colliding with walls reduces health
+
